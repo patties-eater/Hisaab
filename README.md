@@ -47,12 +47,4 @@ hisaab/
 
 ---
 
-## 🚀 Getting Started (Development)
-
-### Prerequisites
-
-- Node.js (v18+)
-- Rust (stable)
-- PostgreSQL (local)
-- Cargo
 
