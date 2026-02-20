@@ -56,9 +56,3 @@ hisaab/
 - PostgreSQL (local)
 - Cargo
 
-### Backend Setup
-
-```bash
-cd backend
-cargo build
-cargo run
