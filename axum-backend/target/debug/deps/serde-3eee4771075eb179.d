@@ -1,0 +1,14 @@
+C:\Users\dive gutam\Hisaab\axum-backend\target\debug\deps\serde-3eee4771075eb179.d: C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\dive\ gutam\Hisaab\axum-backend\target\debug\build\serde-64f714cb3b5017d6\out/private.rs
+
+C:\Users\dive gutam\Hisaab\axum-backend\target\debug\deps\libserde-3eee4771075eb179.rlib: C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\dive\ gutam\Hisaab\axum-backend\target\debug\build\serde-64f714cb3b5017d6\out/private.rs
+
+C:\Users\dive gutam\Hisaab\axum-backend\target\debug\deps\libserde-3eee4771075eb179.rmeta: C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\dive\ gutam\Hisaab\axum-backend\target\debug\build\serde-64f714cb3b5017d6\out/private.rs
+
+C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\dive\ gutam\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\dive\ gutam\Hisaab\axum-backend\target\debug\build\serde-64f714cb3b5017d6\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\dive gutam\\Hisaab\\axum-backend\\target\\debug\\build\\serde-64f714cb3b5017d6\\out
