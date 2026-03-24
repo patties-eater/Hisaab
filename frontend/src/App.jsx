@@ -1,4 +1,3 @@
-// src/App.jsx
 import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -10,49 +9,105 @@ import {
 
 import Dashboard from "./pages/Dashboard.jsx";
 import PeoplePage from "./pages/PeoplePage.jsx";
-
 import DebtCrediPage from "./pages/DebtCreditPage.jsx";
 import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import IncomeExpensePage from "./pages/IncomeExpensePage.jsx";
 import LoginPage from "./pages/loginPage.jsx";
 import RegisterPage from "./pages/RegisterPage.jsx";
-import { getAuthHeaders, getAuthToken } from "./components/api";
+import AdminLoginPage from "./pages/AdminLoginPage.jsx";
+import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
+import {
+  clearAuthSession,
+  getAuthHeaders,
+  getAuthToken,
+  getStoredRole,
+} from "./components/api";
+
+function UserNav({ onLogout }) {
+  return (
+    <nav className="bg-white shadow-md p-4 flex gap-4 justify-center">
+      <Link to="/dashboard" className="text-gray-700 hover:text-blue-600 font-semibold">
+        Dashboard
+      </Link>
+      <Link to="/people" className="text-gray-700 hover:text-blue-600 font-semibold">
+        People
+      </Link>
+      <Link to="/add" className="text-gray-700 hover:text-blue-600 font-semibold">
+        Add Debt/Credit
+      </Link>
+      <Link
+        to="/income-expense"
+        className="text-gray-700 hover:text-blue-600 font-semibold"
+      >
+        Income/Expense
+      </Link>
+      <Link to="/analytics" className="text-gray-700 hover:text-blue-600 font-semibold">
+        Analytics
+      </Link>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="text-red-600 hover:text-red-700 font-semibold"
+      >
+        Logout
+      </button>
+    </nav>
+  );
+}
+
+function AdminNav({ onLogout }) {
+  return (
+    <nav className="bg-slate-900 border-b border-slate-800 p-4 flex gap-4 justify-center">
+      <Link to="/admin/dashboard" className="text-slate-100 hover:text-amber-300 font-semibold">
+        Admin Dashboard
+      </Link>
+      <button
+        type="button"
+        onClick={onLogout}
+        className="text-rose-400 hover:text-rose-300 font-semibold"
+      >
+        Logout
+      </button>
+    </nav>
+  );
+}
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [authState, setAuthState] = useState({ isLoggedIn: false, role: null });
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setIsLoggedIn(false);
+    clearAuthSession();
+    setAuthState({ isLoggedIn: false, role: null });
   };
 
   useEffect(() => {
     const validateToken = async () => {
       const token = getAuthToken();
+      const storedRole = getStoredRole();
 
       if (!token) {
-        setIsLoggedIn(false);
+        setAuthState({ isLoggedIn: false, role: null });
         setIsCheckingAuth(false);
         return;
       }
 
       try {
-        const res = await fetch("http://localhost:5000/dashboard", {
+        const res = await fetch("http://localhost:5000/api/auth/me", {
           headers: getAuthHeaders(),
         });
 
+        const result = await res.json();
+
         if (!res.ok) {
-          localStorage.removeItem("token");
-          setIsLoggedIn(false);
-          setIsCheckingAuth(false);
+          handleLogout();
           return;
         }
 
-        setIsLoggedIn(true);
+        const role = result.data?.role || storedRole || "user";
+        setAuthState({ isLoggedIn: true, role });
       } catch (err) {
-        localStorage.removeItem("token");
-        setIsLoggedIn(false);
+        handleLogout();
       } finally {
         setIsCheckingAuth(false);
       }
@@ -69,115 +124,92 @@ export default function App() {
     );
   }
 
+  const isAdmin = authState.role === "admin";
+  const isUser = authState.role === "user";
+
   return (
     <Router>
       <div className="min-h-screen bg-gray-50 flex flex-col">
-        {/* --- Navbar (only show if logged in) --- */}
-        {isLoggedIn && (
-          <nav className="bg-white shadow-md p-4 flex gap-4 justify-center">
-            <Link
-              to="/dashboard"
-              className="text-gray-700 hover:text-blue-600 font-semibold"
-            >
-              Dashboard
-            </Link>
-            <Link
-              to="/people"
-              className="text-gray-700 hover:text-blue-600 font-semibold"
-            >
-              People
-            </Link>
-            <Link
-              to="/add"
-              className="text-gray-700 hover:text-blue-600 font-semibold"
-            >
-              Add Debt/Credit
-            </Link>
-            <Link
-              to="/income-expense"
-              className="text-gray-700 hover:text-blue-600 font-semibold"
-            >
-              Income/Expense
-            </Link>
-            <Link
-              to="/analytics"
-              className="text-gray-700 hover:text-blue-600 font-semibold"
-            >
-              Analytics
-            </Link>
-            <button
-              type="button"
-              onClick={handleLogout}
-              className="text-red-600 hover:text-red-700 font-semibold"
-            >
-              Logout
-            </button>
-          </nav>
-        )}
+        {isUser && <UserNav onLogout={handleLogout} />}
+        {isAdmin && <AdminNav onLogout={handleLogout} />}
 
-        {/* --- Page Content --- */}
-        <div className="flex-grow p-4">
+        <div className="flex-grow">
           <Routes>
-            {/* Login Route */}
             <Route
               path="/"
               element={
-                isLoggedIn ? (
-                  <Navigate to="/dashboard" />
+                authState.isLoggedIn ? (
+                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
                 ) : (
-                  <LoginPage setIsLoggedIn={setIsLoggedIn} />
+                  <Navigate to="/login" />
                 )
               }
             />
 
-            {/* Register Route */}
-            <Route
-              path="/register"
-              element={
-                isLoggedIn ? <Navigate to="/dashboard" /> : <RegisterPage />
-              }
-            />
-
-            {/* Explicit Login Route (for links) */}
             <Route
               path="/login"
               element={
-                isLoggedIn ? (
-                  <Navigate to="/dashboard" />
+                authState.isLoggedIn ? (
+                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
                 ) : (
-                  <LoginPage setIsLoggedIn={setIsLoggedIn} />
+                  <LoginPage setAuthState={setAuthState} />
                 )
               }
             />
 
-            {/* Protected Routes */}
+            <Route
+              path="/register"
+              element={
+                authState.isLoggedIn ? (
+                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                ) : (
+                  <RegisterPage />
+                )
+              }
+            />
+
+            <Route
+              path="/admin/login"
+              element={
+                authState.isLoggedIn ? (
+                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                ) : (
+                  <AdminLoginPage setAuthState={setAuthState} />
+                )
+              }
+            />
+
             <Route
               path="/dashboard"
-              element={isLoggedIn ? <Dashboard /> : <Navigate to="/" />}
+              element={isUser ? <Dashboard /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
             />
             <Route
               path="/people"
-              element={isLoggedIn ? <PeoplePage /> : <Navigate to="/" />}
+              element={isUser ? <PeoplePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
             />
             <Route
               path="/add"
-              element={isLoggedIn ? <DebtCrediPage /> : <Navigate to="/" />}
+              element={isUser ? <DebtCrediPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
             />
             <Route
               path="/income-expense"
-              element={isLoggedIn ? <IncomeExpensePage /> : <Navigate to="/" />}
+              element={
+                isUser ? <IncomeExpensePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />
+              }
             />
             <Route
               path="/analytics"
-              element={isLoggedIn ? <AnalyticsPage /> : <Navigate to="/" />}
+              element={isUser ? <AnalyticsPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
             />
 
-            {/* Fallback */}
+            <Route
+              path="/admin/dashboard"
+              element={isAdmin ? <AdminDashboardPage /> : <Navigate to={isUser ? "/dashboard" : "/admin/login"} />}
+            />
+
             <Route
               path="*"
-              element={
-                <div className="text-center text-gray-500">Page Not Found</div>
-              }
+              element={<div className="text-center p-8 text-gray-500">Page Not Found</div>}
             />
           </Routes>
         </div>

@@ -4,10 +4,12 @@ require("dotenv").config();
 
 const authRoutes = require("./src/modules/user/user.routes");
 const authMiddleware = require("./src/middlewares/authMiddleware");
+const adminMiddleware = require("./src/middlewares/adminMiddleware");
 const transactionRoutes = require("./src/modules/transactions/transaction.routes");
 const debtCreditRoutes = require("./src/modules/debtCredits/debtCredit.routes");
 const dashboardRoutes = require("./src/modules/dashboard/dashboard.routes");
 const peopleRoutes = require("./src/modules/people/people.routes");
+const adminRoutes = require("./src/modules/admin/admin.routes");
 const { ensureOwnershipColumns } = require("./src/utils/ownership");
 
 const app = express();
@@ -20,6 +22,7 @@ app.use("/api/transactions", authMiddleware, transactionRoutes);
 app.use("/api/debt-credit", authMiddleware, debtCreditRoutes);
 app.use("/api/dashboard", authMiddleware, dashboardRoutes);
 app.use("/api/people", authMiddleware, peopleRoutes);
+app.use("/api/admin", authMiddleware, adminMiddleware, adminRoutes);
 
 app.get("/dashboard", authMiddleware, (req, res) => {
   res.json({ message: `Welcome user ${req.user.id} to the dashboard!` });
