@@ -1,118 +1,211 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { getAuthHeaders } from "./api";
 
-export default function DebtCreditForm() {
+export default function DebtCreditForm({ onSuccess }) {
   const [formData, setFormData] = useState({
-    amount: '',
-    rate: '',
-    duration: '',
-    date: new Date().toISOString().split('T')[0], // Default to today
-    notes: ''
+    name: "",
+    amount: "",
+    rate: "",
+    duration: "",
+    date: new Date().toISOString().split("T")[0],
+    notes: "",
   });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Calculate interest (NUMBER only)
   const calculateInterest = () => {
     const amount = parseFloat(formData.amount) || 0;
     const rate = parseFloat(formData.rate) || 0;
     const duration = parseFloat(formData.duration) || 0;
-    // Formula: Amount * (Interest Rate / 100) * Duration
-    const interest = amount * (rate / 100) * duration;
-    return interest.toLocaleString('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 });
+    return amount * (rate / 100) * duration;
   };
 
-  const handleSubmit = (type) => {
-    console.log(`Saving ${type}:`, {
-      ...formData,
-      type,
-      estimatedInterest: calculateInterest()
-    });
-    // Future: API call to save data
+  const handleSubmit = async (type) => {
+    setError("");
+
+    if (
+      !formData.name ||
+      !formData.amount ||
+      !formData.rate ||
+      !formData.duration
+    ) {
+      return setError("Please fill all required fields");
+    }
+
+    setLoading(true);
+
+    try {
+      const res = await fetch("http://localhost:5000/api/debt-credit", {
+        method: "POST",
+        headers: getAuthHeaders({
+          "Content-Type": "application/json",
+        }),
+        body: JSON.stringify({
+          ...formData,
+          type,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        // Reset form
+        setFormData({
+          name: "",
+          amount: "",
+          rate: "",
+          duration: "",
+          date: new Date().toISOString().split("T")[0],
+          notes: "",
+        });
+
+        if (onSuccess) onSuccess(); // refresh table
+      } else {
+        setError(data.message || "Failed to save");
+      }
+    } catch (err) {
+      setError("Server error. Try again.");
+    }
+
+    setLoading(false);
   };
+
+  const formattedInterest = calculateInterest().toLocaleString("en-IN", {
+    style: "currency",
+    currency: "NRS",
+    maximumFractionDigits: 0,
+  });
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-lg border border-gray-100 font-sans">
-      <h2 className="text-xl font-bold text-gray-800 mb-6 tracking-tight">Add Transaction</h2>
-      
+    <div className="bg-white rounded-xl shadow-md p-6 w-full max-w-lg border border-gray-100">
+      <h2 className="text-xl font-bold text-gray-800 mb-6">
+        Add Debt / Credit
+      </h2>
+
       <div className="space-y-5">
-        {/* Amount Input */}
+        {/* name */}
         <div className="flex flex-col space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Amount</label>
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Name
+          </label>
+          <textarea
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            rows="1"
+            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+          />
+        </div>
+
+        {/* Amount */}
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Amount
+          </label>
           <input
             type="number"
             name="amount"
             value={formData.amount}
             onChange={handleChange}
-            placeholder="e.g. 50000"
-            className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800 font-medium placeholder-gray-300"
+            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
 
+        {/* Rate + Duration */}
         <div className="grid grid-cols-2 gap-4">
-          {/* Interest Rate Input */}
           <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Interest Rate (%)</label>
+            <label className="text-xs font-bold text-gray-500 uppercase">
+              Interest Rate (%)
+            </label>
+
             <input
               type="number"
               name="rate"
               value={formData.rate}
               onChange={handleChange}
-              placeholder="e.g. 2"
-              className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800 font-medium placeholder-gray-300"
+              className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
-          {/* Duration Input */}
           <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Duration (Months)</label>
+            <label className="text-xs font-bold text-gray-500 uppercase">
+              Duration (Months)
+            </label>
             <input
               type="number"
               name="duration"
               value={formData.duration}
               onChange={handleChange}
-              placeholder="e.g. 12"
-              className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800 font-medium placeholder-gray-300"
+              className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
         </div>
 
-        {/* Date Input */}
+        {/* Date */}
         <div className="flex flex-col space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Date</label>
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Date
+          </label>
           <input
             type="date"
             name="date"
             value={formData.date}
             onChange={handleChange}
-            className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800 font-medium"
+            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
 
-        {/* Notes Input */}
+        {/* Notes */}
         <div className="flex flex-col space-y-1">
-          <label className="text-xs font-bold text-gray-500 uppercase tracking-wide">Notes (Optional)</label>
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            Notes
+          </label>
           <textarea
             name="notes"
             value={formData.notes}
             onChange={handleChange}
             rows="3"
-            placeholder="Add any details here..."
-            className="border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-800 font-medium placeholder-gray-300 resize-none"
+            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
           />
         </div>
 
-        {/* Live Interest Preview */}
-        <div className="mt-4 p-4 bg-green-50 rounded-lg border border-green-100 flex justify-between items-center">
-          <span className="text-sm text-green-700 font-semibold">Estimated Interest</span>
-          <span className="text-xl font-bold text-green-700">{calculateInterest()}</span>
+        {/* Interest Preview */}
+        <div className="p-4 bg-green-50 rounded-lg border border-green-100 flex justify-between">
+          <span className="text-sm font-semibold text-green-700">
+            Estimated Interest
+          </span>
+          <span className="text-xl font-bold text-green-700">
+            {formattedInterest}
+          </span>
         </div>
 
-        {/* Action Buttons */}
+        {/* Error */}
+        {error && <p className="text-red-500 text-sm">{error}</p>}
+
+        {/* Buttons */}
         <div className="grid grid-cols-2 gap-4 pt-2">
-          <button onClick={() => handleSubmit('debt')} className="py-3 rounded-lg font-bold text-white shadow-md bg-red-500 hover:bg-red-600 hover:scale-[1.02] transition-all duration-200">Save Debt</button>
-          <button onClick={() => handleSubmit('credit')} className="py-3 rounded-lg font-bold text-white shadow-md bg-green-500 hover:bg-green-600 hover:scale-[1.02] transition-all duration-200">Save Credit</button>
+          <button
+            onClick={() => handleSubmit("debt")}
+            disabled={loading}
+            className="py-3 rounded-lg font-bold text-white bg-red-500 hover:bg-red-600 transition"
+          >
+            {loading ? "Saving..." : "Save Debt"}
+          </button>
+
+          <button
+            onClick={() => handleSubmit("credit")}
+            disabled={loading}
+            className="py-3 rounded-lg font-bold text-white bg-green-500 hover:bg-green-600 transition"
+          >
+            {loading ? "Saving..." : "Save Credit"}
+          </button>
         </div>
       </div>
     </div>
