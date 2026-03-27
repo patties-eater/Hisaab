@@ -10,7 +10,11 @@ const debtCreditRoutes = require("./src/modules/debtCredits/debtCredit.routes");
 const dashboardRoutes = require("./src/modules/dashboard/dashboard.routes");
 const peopleRoutes = require("./src/modules/people/people.routes");
 const adminRoutes = require("./src/modules/admin/admin.routes");
+const journalRoutes = require("./src/modules/journal/journal.routes");
+const accountingJournalRoutes = require("./src/modules/accountingJournal/accountingJournal.routes");
 const { ensureOwnershipColumns } = require("./src/utils/ownership");
+const { ensureJournalTable } = require("./src/utils/journal");
+const { ensureAccountingJournalTables } = require("./src/utils/accountingJournal");
 
 const app = express();
 
@@ -22,6 +26,8 @@ app.use("/api/transactions", authMiddleware, transactionRoutes);
 app.use("/api/debt-credit", authMiddleware, debtCreditRoutes);
 app.use("/api/dashboard", authMiddleware, dashboardRoutes);
 app.use("/api/people", authMiddleware, peopleRoutes);
+app.use("/api/journal", authMiddleware, journalRoutes);
+app.use("/api/accounting-journal", authMiddleware, accountingJournalRoutes);
 app.use("/api/admin", authMiddleware, adminMiddleware, adminRoutes);
 
 app.get("/dashboard", authMiddleware, (req, res) => {
@@ -30,11 +36,15 @@ app.get("/dashboard", authMiddleware, (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-ensureOwnershipColumns()
+Promise.all([
+  ensureOwnershipColumns(),
+  ensureJournalTable(),
+  ensureAccountingJournalTables(),
+])
   .then(() => {
     app.listen(PORT, () => console.log(`Server running on port ${PORT} OK`));
   })
   .catch((err) => {
-    console.error("Failed to ensure ownership columns:", err);
+    console.error("Failed to initialize database helpers:", err);
     process.exit(1);
   });

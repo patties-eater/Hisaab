@@ -16,6 +16,8 @@ const formatCurrency = (value) => {
 export default function DebtCreditPage() {
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [closingRecordId, setClosingRecordId] = useState(null);
+  const [error, setError] = useState("");
 
   const fetchRecords = async () => {
     try {
@@ -26,9 +28,11 @@ export default function DebtCreditPage() {
 
       if (data.success) {
         setRecords(data.data);
+        setError("");
       }
     } catch (err) {
       console.error("Fetch error:", err);
+      setError("Could not load debt/credit records.");
     } finally {
       setLoading(false);
     }
@@ -39,15 +43,58 @@ export default function DebtCreditPage() {
   }, []);
 
   // Summary calculations
-  const totalDebt = records
+  const activeRecords = records.filter(
+    (record) => (record.status || "active") === "active",
+  );
+
+  const totalDebt = activeRecords
     .filter((r) => r.type === "debt")
     .reduce((sum, r) => sum + Number(r.amount), 0);
 
-  const totalCredit = records
+  const totalCredit = activeRecords
     .filter((r) => r.type === "credit")
     .reduce((sum, r) => sum + Number(r.amount), 0);
 
   const netBalance = totalCredit - totalDebt;
+
+  const handleCloseRecord = async (record, closeDate) => {
+    const confirmed = window.confirm(
+      `Clear this ${record.type} for ${record.name} on ${closeDate}? Interest will be posted automatically to ${
+        record.type === "credit" ? "Income" : "Expense"
+      }.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    setClosingRecordId(record.id);
+    setError("");
+
+    try {
+      const res = await fetch(
+        `http://localhost:5000/api/debt-credit/${record.id}/close`,
+        {
+          method: "POST",
+          headers: getAuthHeaders({ "Content-Type": "application/json" }),
+          body: JSON.stringify({ closeDate }),
+        },
+      );
+      const data = await res.json();
+
+      if (!data.success) {
+        setError(data.message || "Could not clear this record.");
+        return;
+      }
+
+      await fetchRecords();
+    } catch (err) {
+      console.error("Close record error:", err);
+      setError("Could not clear this record.");
+    } finally {
+      setClosingRecordId(null);
+    }
+  };
 
   return (
     <div className="p-8 space-y-8">
@@ -85,12 +132,23 @@ export default function DebtCreditPage() {
         </div>
       </div>
 
+      {error && (
+        <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
       {/* Form + Table */}
-      <div className="grid lg:grid-cols-3 gap-8">
+      <div className="grid items-start gap-8 lg:grid-cols-3">
         <DebtCreditForm onSuccess={fetchRecords} />
 
         <div className="lg:col-span-2">
-          <DebtCreditTable records={records} loading={loading} />
+          <DebtCreditTable
+            records={records}
+            loading={loading}
+            onCloseRecord={handleCloseRecord}
+            closingRecordId={closingRecordId}
+          />
         </div>
       </div>
     </div>

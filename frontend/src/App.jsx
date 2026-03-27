@@ -1,21 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Link,
+  NavLink,
   Navigate,
 } from "react-router-dom";
-
-import Dashboard from "./pages/Dashboard.jsx";
-import PeoplePage from "./pages/PeoplePage.jsx";
-import DebtCrediPage from "./pages/DebtCreditPage.jsx";
-import AnalyticsPage from "./pages/AnalyticsPage.jsx";
-import IncomeExpensePage from "./pages/IncomeExpensePage.jsx";
-import LoginPage from "./pages/loginPage.jsx";
-import RegisterPage from "./pages/RegisterPage.jsx";
-import AdminLoginPage from "./pages/AdminLoginPage.jsx";
-import AdminDashboardPage from "./pages/AdminDashboardPage.jsx";
 import {
   clearAuthSession,
   getAuthHeaders,
@@ -23,52 +13,94 @@ import {
   getStoredRole,
 } from "./components/api";
 
+const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
+const PeoplePage = lazy(() => import("./pages/PeoplePage.jsx"));
+const DebtCrediPage = lazy(() => import("./pages/DebtCreditPage.jsx"));
+const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.jsx"));
+const IncomeExpensePage = lazy(() => import("./pages/IncomeExpensePage.jsx"));
+const AuditPage = lazy(() => import("./pages/AuditPage.jsx"));
+const LoginPage = lazy(() => import("./pages/loginPage.jsx"));
+const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
+const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage.jsx"));
+const AdminDashboardPage = lazy(() => import("./pages/AdminDashboardPage.jsx"));
+
+function navLinkClasses({ isActive }) {
+  return `rounded-full px-4 py-2 text-sm font-semibold transition ${
+    isActive
+      ? "bg-slate-900 text-white shadow-sm"
+      : "text-gray-700 hover:bg-slate-100 hover:text-blue-600"
+  }`;
+}
+
+function adminNavLinkClasses({ isActive }) {
+  return `rounded-full px-4 py-2 text-sm font-semibold transition ${
+    isActive
+      ? "bg-amber-400 text-slate-950 shadow-sm"
+      : "text-slate-100 hover:bg-slate-800 hover:text-amber-300"
+  }`;
+}
+
 function UserNav({ onLogout }) {
   return (
-    <nav className="bg-white shadow-md p-4 flex gap-4 justify-center">
-      <Link to="/dashboard" className="text-gray-700 hover:text-blue-600 font-semibold">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-md backdrop-blur">
+      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
+        <NavLink to="/dashboard" className={navLinkClasses}>
         Dashboard
-      </Link>
-      <Link to="/people" className="text-gray-700 hover:text-blue-600 font-semibold">
+        </NavLink>
+        <NavLink to="/people" className={navLinkClasses}>
         People
-      </Link>
-      <Link to="/add" className="text-gray-700 hover:text-blue-600 font-semibold">
+        </NavLink>
+        <NavLink to="/add" className={navLinkClasses}>
         Add Debt/Credit
-      </Link>
-      <Link
+        </NavLink>
+        <NavLink
         to="/income-expense"
-        className="text-gray-700 hover:text-blue-600 font-semibold"
+        className={navLinkClasses}
       >
         Income/Expense
-      </Link>
-      <Link to="/analytics" className="text-gray-700 hover:text-blue-600 font-semibold">
+        </NavLink>
+        <NavLink to="/analytics" className={navLinkClasses}>
         Analytics
-      </Link>
-      <button
-        type="button"
-        onClick={onLogout}
-        className="text-red-600 hover:text-red-700 font-semibold"
-      >
-        Logout
-      </button>
+        </NavLink>
+        <NavLink to="/audit" className={navLinkClasses}>
+        Audit
+        </NavLink>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 md:ml-0"
+        >
+          Logout
+        </button>
+      </div>
     </nav>
   );
 }
 
 function AdminNav({ onLogout }) {
   return (
-    <nav className="bg-slate-900 border-b border-slate-800 p-4 flex gap-4 justify-center">
-      <Link to="/admin/dashboard" className="text-slate-100 hover:text-amber-300 font-semibold">
+    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-800 bg-slate-900/95 shadow-md backdrop-blur">
+      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
+        <NavLink to="/admin/dashboard" className={adminNavLinkClasses}>
         Admin Dashboard
-      </Link>
-      <button
-        type="button"
-        onClick={onLogout}
-        className="text-rose-400 hover:text-rose-300 font-semibold"
-      >
-        Logout
-      </button>
+        </NavLink>
+        <button
+          type="button"
+          onClick={onLogout}
+          className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-slate-800 hover:text-rose-200 md:ml-0"
+        >
+          Logout
+        </button>
+      </div>
     </nav>
+  );
+}
+
+function RouteFallback() {
+  return (
+    <div className="min-h-[40vh] flex items-center justify-center text-gray-500">
+      Loading page...
+    </div>
   );
 }
 
@@ -133,85 +165,95 @@ export default function App() {
         {isUser && <UserNav onLogout={handleLogout} />}
         {isAdmin && <AdminNav onLogout={handleLogout} />}
 
-        <div className="flex-grow">
-          <Routes>
-            <Route
-              path="/"
-              element={
-                authState.isLoggedIn ? (
-                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
-                ) : (
-                  <Navigate to="/login" />
-                )
-              }
-            />
+        <div className="flex-grow pt-20">
+          <Suspense fallback={<RouteFallback />}>
+            <Routes>
+              <Route
+                path="/"
+                element={
+                  authState.isLoggedIn ? (
+                    <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
 
-            <Route
-              path="/login"
-              element={
-                authState.isLoggedIn ? (
-                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
-                ) : (
-                  <LoginPage setAuthState={setAuthState} />
-                )
-              }
-            />
+              <Route
+                path="/login"
+                element={
+                  authState.isLoggedIn ? (
+                    <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                  ) : (
+                    <LoginPage setAuthState={setAuthState} />
+                  )
+                }
+              />
 
-            <Route
-              path="/register"
-              element={
-                authState.isLoggedIn ? (
-                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
-                ) : (
-                  <RegisterPage />
-                )
-              }
-            />
+              <Route
+                path="/register"
+                element={
+                  authState.isLoggedIn ? (
+                    <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                  ) : (
+                    <RegisterPage />
+                  )
+                }
+              />
 
-            <Route
-              path="/admin/login"
-              element={
-                authState.isLoggedIn ? (
-                  <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
-                ) : (
-                  <AdminLoginPage setAuthState={setAuthState} />
-                )
-              }
-            />
+              <Route
+                path="/admin/login"
+                element={
+                  authState.isLoggedIn ? (
+                    <Navigate to={isAdmin ? "/admin/dashboard" : "/dashboard"} />
+                  ) : (
+                    <AdminLoginPage setAuthState={setAuthState} />
+                  )
+                }
+              />
 
-            <Route
-              path="/dashboard"
-              element={isUser ? <Dashboard /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
-            />
-            <Route
-              path="/people"
-              element={isUser ? <PeoplePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
-            />
-            <Route
-              path="/add"
-              element={isUser ? <DebtCrediPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
-            />
-            <Route
-              path="/income-expense"
-              element={
-                isUser ? <IncomeExpensePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />
-              }
-            />
-            <Route
-              path="/analytics"
-              element={isUser ? <AnalyticsPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
-            />
+              <Route
+                path="/dashboard"
+                element={isUser ? <Dashboard /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
+                path="/people"
+                element={isUser ? <PeoplePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
+                path="/add"
+                element={isUser ? <DebtCrediPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
+                path="/income-expense"
+                element={
+                  isUser ? <IncomeExpensePage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />
+                }
+              />
+              <Route
+                path="/analytics"
+                element={isUser ? <AnalyticsPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
+                path="/audit"
+                element={isUser ? <AuditPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
+                path="/journal-entries"
+                element={<Navigate to="/audit" replace />}
+              />
 
-            <Route
-              path="/admin/dashboard"
-              element={isAdmin ? <AdminDashboardPage /> : <Navigate to={isUser ? "/dashboard" : "/admin/login"} />}
-            />
+              <Route
+                path="/admin/dashboard"
+                element={isAdmin ? <AdminDashboardPage /> : <Navigate to={isUser ? "/dashboard" : "/admin/login"} />}
+              />
 
-            <Route
-              path="*"
-              element={<div className="text-center p-8 text-gray-500">Page Not Found</div>}
-            />
-          </Routes>
+              <Route
+                path="*"
+                element={<div className="text-center p-8 text-gray-500">Page Not Found</div>}
+              />
+            </Routes>
+          </Suspense>
         </div>
       </div>
     </Router>

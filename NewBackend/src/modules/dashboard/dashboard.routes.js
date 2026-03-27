@@ -24,7 +24,8 @@ router.get("/", async (req, res) => {
         SUM(CASE WHEN type = 'debt' THEN amount ELSE 0 END) AS debt_total,
         SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS credit_total
       FROM debt_credit
-      WHERE user_id = $1;
+      WHERE user_id = $1
+        AND COALESCE(status, 'active') = 'active';
     `;
     const debtCreditResult = await pool.query(debtCreditQuery, [userId]);
 
