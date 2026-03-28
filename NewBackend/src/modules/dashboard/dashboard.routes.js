@@ -2,21 +2,22 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../../config/db");
-const { getAuthenticatedUserId } = require("../../utils/ownership");
+const { getAuthenticatedAccountMode, getAuthenticatedUserId } = require("../../utils/ownership");
 
 // GET /api/dashboard
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     // --- Income / Expense totals ---
     const incomeExpenseQuery = `
       SELECT
         SUM(CASE WHEN LOWER(type) = 'income' THEN amount ELSE 0 END) AS income_total,
         SUM(CASE WHEN LOWER(type) = 'expense' THEN amount ELSE 0 END) AS expense_total
       FROM transactions
-      WHERE user_id = $1;
+      WHERE user_id = $1 AND account_mode = $2;
     `;
-    const incomeExpenseResult = await pool.query(incomeExpenseQuery, [userId]);
+    const incomeExpenseResult = await pool.query(incomeExpenseQuery, [userId, accountMode]);
 
     // --- Debt / Credit totals ---
     const debtCreditQuery = `
@@ -25,9 +26,10 @@ router.get("/", async (req, res) => {
         SUM(CASE WHEN type = 'credit' THEN amount ELSE 0 END) AS credit_total
       FROM debt_credit
       WHERE user_id = $1
+        AND account_mode = $2
         AND COALESCE(status, 'active') = 'active';
     `;
-    const debtCreditResult = await pool.query(debtCreditQuery, [userId]);
+    const debtCreditResult = await pool.query(debtCreditQuery, [userId, accountMode]);
 
     // --- Return JSON ---
     res.json({

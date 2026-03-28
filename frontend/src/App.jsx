@@ -9,10 +9,13 @@ import {
 import {
   clearAuthSession,
   getAuthHeaders,
+  getStoredAccountMode,
   getAuthToken,
   getStoredRole,
+  setStoredAccountMode,
   setStoredLanguage,
 } from "./components/api";
+import { AccountModeProvider, useAccountMode } from "./accountMode";
 import { I18nProvider, useI18n } from "./i18n";
 
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
@@ -116,6 +119,7 @@ function RouteFallback() {
 
 function AppShell() {
   const { applyLanguage } = useI18n();
+  const { setAccountMode } = useAccountMode();
   const [authState, setAuthState] = useState({ isLoggedIn: false, role: null });
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
@@ -128,6 +132,7 @@ function AppShell() {
     const validateToken = async () => {
       const token = getAuthToken();
       const storedRole = getStoredRole();
+      const storedAccountMode = getStoredAccountMode();
 
       if (!token) {
         setAuthState({ isLoggedIn: false, role: null });
@@ -149,11 +154,15 @@ function AppShell() {
 
         const role = result.data?.role || storedRole || "user";
         const preferredLanguage = result.data?.preferredLanguage;
+        const preferredAccountMode = result.data?.preferredAccountMode || storedAccountMode;
 
         if (preferredLanguage) {
           applyLanguage(preferredLanguage);
           setStoredLanguage(preferredLanguage);
         }
+
+        setAccountMode(preferredAccountMode);
+        setStoredAccountMode(preferredAccountMode);
 
         setAuthState({ isLoggedIn: true, role });
       } catch (err) {
@@ -164,7 +173,7 @@ function AppShell() {
     };
 
     validateToken();
-  }, [applyLanguage]);
+  }, [applyLanguage, setAccountMode]);
 
   if (isCheckingAuth) {
     return (
@@ -285,7 +294,9 @@ function AppShell() {
 export default function App() {
   return (
     <I18nProvider>
-      <AppShell />
+      <AccountModeProvider>
+        <AppShell />
+      </AccountModeProvider>
     </I18nProvider>
   );
 }

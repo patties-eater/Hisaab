@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { setAuthSession, setStoredLanguage } from "../components/api";
+import { setAuthSession, setStoredAccountMode, setStoredLanguage } from "../components/api";
+import { useAccountMode } from "../accountMode";
 import { useI18n } from "../i18n";
 
 export default function LoginPage({ setAuthState }) {
   const { applyLanguage } = useI18n();
+  const { setAccountMode } = useAccountMode();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [output, setOutput] = useState("");
@@ -27,6 +29,11 @@ export default function LoginPage({ setAuthState }) {
         if (data.preferredLanguage) {
           applyLanguage(data.preferredLanguage);
           setStoredLanguage(data.preferredLanguage);
+        }
+
+        if (data.preferredAccountMode) {
+          setAccountMode(data.preferredAccountMode);
+          setStoredAccountMode(data.preferredAccountMode);
         }
 
         setAuthSession({ token: data.token, role: "user" });

@@ -79,6 +79,7 @@ router.post("/login", async (req, res) => {
       message: "Login successful",
       token,
       preferredLanguage: user.preferred_language || "en",
+      preferredAccountMode: user.preferred_account_mode || "personal",
     });
   } catch (err) {
     console.error("🔥 Error in login:", err);
@@ -129,20 +130,25 @@ router.post("/admin/login", async (req, res) => {
 
 router.patch("/preferences", authMiddleware, async (req, res) => {
   try {
-    const { language } = req.body;
+    const { language, accountMode } = req.body;
 
-    if (!["en", "ne"].includes(language)) {
+    if (language && !["en", "ne"].includes(language)) {
       return res.status(400).json({ error: "Invalid language preference" });
+    }
+
+    if (accountMode && !["personal", "shop"].includes(accountMode)) {
+      return res.status(400).json({ error: "Invalid account mode preference" });
     }
 
     const result = await pool.query(
       `
         UPDATE users
-        SET preferred_language = $1
-        WHERE id = $2
-        RETURNING id, email, preferred_language
+        SET preferred_language = COALESCE($1, preferred_language),
+            preferred_account_mode = COALESCE($2, preferred_account_mode)
+        WHERE id = $3
+        RETURNING id, email, preferred_language, preferred_account_mode
       `,
-      [language, req.user.id],
+      [language || null, accountMode || null, req.user.id],
     );
 
     if (result.rows.length === 0) {
@@ -155,6 +161,7 @@ router.patch("/preferences", authMiddleware, async (req, res) => {
         id: result.rows[0].id,
         email: result.rows[0].email,
         preferredLanguage: result.rows[0].preferred_language || "en",
+        preferredAccountMode: result.rows[0].preferred_account_mode || "personal",
       },
     });
   } catch (err) {
@@ -173,13 +180,15 @@ router.get("/me", async (req, res) => {
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
     let preferredLanguage = "en";
+    let preferredAccountMode = "personal";
 
     if ((verified.role || "user") === "user" && verified.id) {
       const userResult = await pool.query(
-        "SELECT preferred_language FROM users WHERE id = $1",
+        "SELECT preferred_language, preferred_account_mode FROM users WHERE id = $1",
         [verified.id],
       );
       preferredLanguage = userResult.rows[0]?.preferred_language || "en";
+      preferredAccountMode = userResult.rows[0]?.preferred_account_mode || "personal";
     }
 
     res.json({
@@ -190,6 +199,7 @@ router.get("/me", async (req, res) => {
         email: verified.email || null,
         userId: verified.userId || null,
         preferredLanguage,
+        preferredAccountMode,
       },
     });
   } catch (err) {

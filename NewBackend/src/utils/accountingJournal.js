@@ -15,6 +15,11 @@ async function ensureAccountingJournalTables() {
   `);
 
   await pool.query(`
+    ALTER TABLE journal_vouchers
+    ADD COLUMN IF NOT EXISTS account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
+  `);
+
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS journal_lines (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       voucher_id UUID NOT NULL REFERENCES journal_vouchers(id) ON DELETE CASCADE,
@@ -68,15 +73,16 @@ async function createJournalVoucher(client, {
   sourceId = null,
   userId = null,
   lines,
+  accountMode = "personal",
 }) {
   validateLines(lines);
 
   const voucherResult = await client.query(
     `INSERT INTO journal_vouchers
-     (date, reference_no, description, source_type, source_id, user_id)
-     VALUES ($1, $2, $3, $4, $5, $6)
+     (date, reference_no, description, source_type, source_id, user_id, account_mode)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING *`,
-    [date, referenceNo, description, sourceType, sourceId, userId]
+    [date, referenceNo, description, sourceType, sourceId, userId, accountMode]
   );
 
   const voucher = voucherResult.rows[0];

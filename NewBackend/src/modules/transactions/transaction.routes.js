@@ -1,6 +1,6 @@
 const express = require("express");
 const pool = require("../../config/db");
-const { getAuthenticatedUserId } = require("../../utils/ownership");
+const { getAuthenticatedAccountMode, getAuthenticatedUserId } = require("../../utils/ownership");
 const { createJournalEntry } = require("../../utils/journal");
 const { createJournalVoucher } = require("../../utils/accountingJournal");
 
@@ -10,9 +10,10 @@ const router = express.Router();
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const result = await pool.query(
-      "SELECT * FROM transactions WHERE user_id = $1 ORDER BY date DESC, created_at DESC",
-      [userId]
+      "SELECT * FROM transactions WHERE user_id = $1 AND account_mode = $2 ORDER BY date DESC, created_at DESC",
+      [userId, accountMode]
     );
     res.json({ success: true, data: result.rows });
   } catch (err) {
@@ -27,14 +28,15 @@ router.post("/", async (req, res) => {
 
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const { name, type, title, amount, date } = req.body;
     const txDate = date || new Date().toISOString().split("T")[0];
 
     await client.query("BEGIN");
 
     const result = await client.query(
-      "INSERT INTO transactions (name, type, title, amount, date, user_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *",
-      [name, type, title, amount, txDate, userId]
+      "INSERT INTO transactions (name, type, title, amount, date, user_id, account_mode) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
+      [name, type, title, amount, txDate, userId, accountMode]
     );
 
     await createJournalEntry(client, {
@@ -46,6 +48,7 @@ router.post("/", async (req, res) => {
       referenceNo: result.rows[0].id,
       afterData: result.rows[0],
       notes: `Created ${type} transaction`,
+      accountMode,
     });
 
     await createJournalVoucher(client, {
@@ -55,6 +58,7 @@ router.post("/", async (req, res) => {
       sourceType: "transaction",
       sourceId: result.rows[0].id,
       userId,
+      accountMode,
       lines:
         type === "Income"
           ? [

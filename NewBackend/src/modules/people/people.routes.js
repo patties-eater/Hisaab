@@ -1,12 +1,13 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../../config/db");
-const { getAuthenticatedUserId } = require("../../utils/ownership");
+const { getAuthenticatedAccountMode, getAuthenticatedUserId } = require("../../utils/ownership");
 
 // GET all debt/credit transactions
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const result = await pool.query(`
       SELECT 
         id,
@@ -20,8 +21,9 @@ router.get("/", async (req, res) => {
         created_at
       FROM debt_credit
       WHERE user_id = $1
+        AND account_mode = $2
       ORDER BY date DESC;
-    `, [userId]);
+    `, [userId, accountMode]);
 
     res.json({ success: true, data: result.rows });
   } catch (err) {

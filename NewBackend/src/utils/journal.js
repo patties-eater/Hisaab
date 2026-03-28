@@ -19,6 +19,11 @@ async function ensureJournalTable() {
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     );
   `);
+
+  await pool.query(`
+    ALTER TABLE journal_entries
+    ADD COLUMN IF NOT EXISTS account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
+  `);
 }
 
 function stableStringify(value) {
@@ -72,6 +77,7 @@ async function createJournalEntry(client, {
   afterData = null,
   notes = null,
   createdAt = new Date().toISOString(),
+  accountMode = "personal",
 }) {
   const previousEntryResult = await client.query(
     `SELECT row_hash
@@ -97,8 +103,8 @@ async function createJournalEntry(client, {
 
   const insertResult = await client.query(
     `INSERT INTO journal_entries
-     (entity_type, entity_id, action, user_id, amount, reference_no, before_data, after_data, notes, prev_hash, row_hash, created_at)
-     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10, $11, $12)
+     (entity_type, entity_id, action, user_id, amount, reference_no, before_data, after_data, notes, prev_hash, row_hash, created_at, account_mode)
+     VALUES ($1, $2, $3, $4, $5, $6, $7::jsonb, $8::jsonb, $9, $10, $11, $12, $13)
      RETURNING *`,
     [
       entityType,
@@ -113,6 +119,7 @@ async function createJournalEntry(client, {
       prevHash,
       rowHash,
       createdAt,
+      accountMode,
     ]
   );
 

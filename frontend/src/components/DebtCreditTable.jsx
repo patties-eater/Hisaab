@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAccountMode } from "../accountMode";
 import { useI18n } from "../i18n";
 import { formatDisplayDate } from "../utils/dates";
 
@@ -104,6 +105,7 @@ export default function DebtCreditTable({
   onCloseRecord,
   closingRecordId,
 }) {
+  const { isShopMode } = useAccountMode();
   const { language, t } = useI18n();
   const locale = language === "ne" ? "ne-NP" : "en-NP";
   const [closeDates, setCloseDates] = useState({});
@@ -126,9 +128,9 @@ export default function DebtCreditTable({
                 <th className="py-2 px-3">{t("debtCreditTable.name")}</th>
                 <th className="py-2 px-3">{t("debtCreditTable.type")}</th>
                 <th className="py-2 px-3">{t("debtCreditTable.amount")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.rate")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.duration")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.interest")}</th>
+                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.rate")}</th>}
+                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.duration")}</th>}
+                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.interest")}</th>}
                 <th className="py-2 px-3">{t("debtCreditTable.date")}</th>
                 <th className="py-2 px-3">{t("debtCreditTable.status")}</th>
                 <th className="py-2 px-3">{t("debtCreditTable.clearance")}</th>
@@ -164,18 +166,22 @@ export default function DebtCreditTable({
 
                     <td className="py-2 px-3">{formatCurrency(item.amount)}</td>
 
-                    <td className="py-2 px-3">{item.rate}%</td>
+                    {!isShopMode && <td className="py-2 px-3">{item.rate}%</td>}
 
-                    <td className="py-2 px-3">{item.duration} {t("debtCreditTable.monthsShort")}</td>
+                    {!isShopMode && (
+                      <td className="py-2 px-3">{item.duration} {t("debtCreditTable.monthsShort")}</td>
+                    )}
 
-                    <td className="py-2 px-3">
-                      <div>{formatCurrency(item.estimated_interest)}</div>
-                      {item.status !== "closed" && (
-                        <div className="text-xs text-gray-500">
-                          {t("debtCreditTable.closeInterest")}: {formatCurrency(previewInterest)}
-                        </div>
-                      )}
-                    </td>
+                    {!isShopMode && (
+                      <td className="py-2 px-3">
+                        <div>{formatCurrency(item.estimated_interest)}</div>
+                        {item.status !== "closed" && (
+                          <div className="text-xs text-gray-500">
+                            {t("debtCreditTable.closeInterest")}: {formatCurrency(previewInterest)}
+                          </div>
+                        )}
+                      </td>
+                    )}
 
                     <td className="py-2 px-3">
                       {formatDisplayDate(item.date, locale)}
@@ -203,11 +209,17 @@ export default function DebtCreditTable({
                     <td className="py-2 px-3 min-w-[220px]">
                       {item.status === "closed" ? (
                         <div className="text-xs text-gray-600">
-                          {item.type === "credit"
-                            ? t("debtCreditTable.creditInterestPosted")
-                            : t("debtCreditTable.debtInterestPosted")}:
-                          {" "}
-                          {formatCurrency(item.settled_interest)}
+                          {isShopMode
+                            ? formatCurrency(item.amount)
+                            : (
+                              <>
+                                {item.type === "credit"
+                                  ? t("debtCreditTable.creditInterestPosted")
+                                  : t("debtCreditTable.debtInterestPosted")}:
+                                {" "}
+                                {formatCurrency(item.settled_interest)}
+                              </>
+                            )}
                         </div>
                       ) : (
                         <div className="space-y-2">

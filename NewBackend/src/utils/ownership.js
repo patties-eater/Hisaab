@@ -7,8 +7,18 @@ async function ensureOwnershipColumns() {
   `);
 
   await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS preferred_account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
+  `);
+
+  await pool.query(`
     ALTER TABLE transactions
     ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+  `);
+
+  await pool.query(`
+    ALTER TABLE transactions
+    ADD COLUMN IF NOT EXISTS account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
   `);
 
   await pool.query(`
@@ -19,6 +29,11 @@ async function ensureOwnershipColumns() {
   await pool.query(`
     ALTER TABLE debt_credit
     ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
+  `);
+
+  await pool.query(`
+    ALTER TABLE debt_credit
+    ADD COLUMN IF NOT EXISTS account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
   `);
 
   await pool.query(`
@@ -46,7 +61,12 @@ function getAuthenticatedUserId(req) {
   return req.user?.id;
 }
 
+function getAuthenticatedAccountMode(req) {
+  return req.header("X-Account-Mode") === "shop" ? "shop" : "personal";
+}
+
 module.exports = {
   ensureOwnershipColumns,
   getAuthenticatedUserId,
+  getAuthenticatedAccountMode,
 };

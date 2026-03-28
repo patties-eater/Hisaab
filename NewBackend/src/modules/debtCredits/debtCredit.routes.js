@@ -1,6 +1,6 @@
 const express = require("express");
 const pool = require("../../config/db");
-const { getAuthenticatedUserId } = require("../../utils/ownership");
+const { getAuthenticatedAccountMode, getAuthenticatedUserId } = require("../../utils/ownership");
 const { createJournalEntry } = require("../../utils/journal");
 const { createJournalVoucher } = require("../../utils/accountingJournal");
 
@@ -87,12 +87,13 @@ function calculateSettledInterest(recordDate, closingDate, amount, rate, duratio
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const result = await pool.query(
       `SELECT *
        FROM debt_credit
-       WHERE user_id = $1
+       WHERE user_id = $1 AND account_mode = $2
        ORDER BY COALESCE(closed_at, date) DESC, created_at DESC`,
-      [userId]
+      [userId, accountMode]
     );
 
     res.json({ success: true, data: result.rows });
@@ -107,9 +108,10 @@ router.post("/", async (req, res) => {
 
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const { name, type, amount, rate, duration, date, notes } = req.body;
 
-    if (!name || !type || !amount || !rate || !duration) {
+    if (!name || !type || !amount || (accountMode === "personal" && (!rate || !duration))) {
       return res.status(400).json({
         success: false,
         message: "Missing required fields",
@@ -117,8 +119,8 @@ router.post("/", async (req, res) => {
     }
 
     const numericAmount = Number(amount);
-    const numericRate = Number(rate);
-    const numericDuration = Number(duration);
+    const numericRate = accountMode === "shop" ? 0 : Number(rate);
+    const numericDuration = accountMode === "shop" ? 0 : Number(duration);
     const estimatedInterest =
       numericAmount * (numericRate / 100) * numericDuration;
     const recordDate = date || formatDateOnly(new Date());
@@ -127,8 +129,8 @@ router.post("/", async (req, res) => {
 
     const result = await client.query(
       `INSERT INTO debt_credit
-       (name, type, amount, rate, duration, estimated_interest, date, notes, user_id, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active')
+       (name, type, amount, rate, duration, estimated_interest, date, notes, user_id, status, account_mode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10)
        RETURNING *`,
       [
         name,
@@ -140,6 +142,7 @@ router.post("/", async (req, res) => {
         recordDate,
         notes || null,
         userId,
+        accountMode,
       ]
     );
 
@@ -152,6 +155,7 @@ router.post("/", async (req, res) => {
       referenceNo: result.rows[0].id,
       afterData: result.rows[0],
       notes: `Created ${type} record`,
+      accountMode,
     });
 
     await createJournalVoucher(client, {
@@ -161,6 +165,7 @@ router.post("/", async (req, res) => {
       sourceType: "debt_credit_create",
       sourceId: result.rows[0].id,
       userId,
+      accountMode,
       lines:
         type === "debt"
           ? [
@@ -213,6 +218,7 @@ router.post("/", async (req, res) => {
 
 router.post("/:id/close", async (req, res) => {
   const userId = getAuthenticatedUserId(req);
+  const accountMode = getAuthenticatedAccountMode(req);
   const recordId = req.params.id;
   const closeDate = normalizeDate(req.body?.closeDate);
 
@@ -232,9 +238,9 @@ router.post("/:id/close", async (req, res) => {
     const recordResult = await client.query(
       `SELECT *
        FROM debt_credit
-       WHERE id = $1 AND user_id = $2
+       WHERE id = $1 AND user_id = $2 AND account_mode = $3
        FOR UPDATE`,
-      [recordId, userId]
+      [recordId, userId, accountMode]
     );
 
     if (recordResult.rows.length === 0) {
@@ -274,13 +280,13 @@ router.post("/:id/close", async (req, res) => {
 
     let transactionId = null;
 
-    if (settledInterest > 0) {
+    if (accountMode === "personal" && settledInterest > 0) {
       const transactionType = record.type === "credit" ? "Income" : "Expense";
       const transactionTitle = `${record.type === "credit" ? "Credit" : "Debt"} clearance interest`;
 
       const transactionResult = await client.query(
         `INSERT INTO transactions (name, type, title, amount, date, user_id, debt_credit_id)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [
           record.name,
@@ -290,6 +296,7 @@ router.post("/:id/close", async (req, res) => {
           formatDateOnly(closeDate),
           userId,
           record.id,
+          accountMode,
         ]
       );
 
@@ -320,6 +327,7 @@ router.post("/:id/close", async (req, res) => {
         settlement_transaction_id: transactionId,
       },
       notes: `Closed ${record.type} record with auto ${record.type === "credit" ? "income" : "expense"} posting`,
+      accountMode,
     });
 
     if (transactionId !== null) {
@@ -340,11 +348,43 @@ router.post("/:id/close", async (req, res) => {
           name: record.name,
         },
         notes: `Auto-posted clearance interest for ${record.type} record`,
+        accountMode,
       });
     }
 
     const closeDateString = formatDateOnly(closeDate);
     const closeLines =
+      accountMode === "shop"
+        ? record.type === "debt"
+          ? [
+              {
+                accountName: "Supplier Due",
+                accountType: "Liability",
+                debit: Number(record.amount),
+                credit: 0,
+              },
+              {
+                accountName: "Cash",
+                accountType: "Asset",
+                debit: 0,
+                credit: Number(record.amount),
+              },
+            ]
+          : [
+              {
+                accountName: "Cash",
+                accountType: "Asset",
+                debit: Number(record.amount),
+                credit: 0,
+              },
+              {
+                accountName: "Customer Credit",
+                accountType: "Asset",
+                debit: 0,
+                credit: Number(record.amount),
+              },
+            ]
+        :
       record.type === "debt"
         ? [
             {
@@ -402,6 +442,7 @@ router.post("/:id/close", async (req, res) => {
       sourceType: "debt_credit_close",
       sourceId: record.id,
       userId,
+      accountMode,
       lines: closeLines,
     });
 

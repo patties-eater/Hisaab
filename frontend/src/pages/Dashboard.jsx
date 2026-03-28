@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useAccountMode } from "../accountMode";
 import { NavLink } from "react-router-dom";
 import { getAuthHeaders } from "../components/api";
 import { useI18n } from "../i18n";
@@ -58,6 +59,7 @@ function QuickLink({ to, title, hint }) {
 }
 
 export default function Dashboard() {
+  const { isShopMode } = useAccountMode();
   const { language, t } = useI18n();
   const locale = language === "ne" ? "ne-NP" : "en-NP";
   const [dashboardData, setDashboardData] = useState({
@@ -163,13 +165,13 @@ export default function Dashboard() {
           title={t("dashboard.income")}
           value={formatCurrency(insights.totalIncome)}
           tone="green"
-          meta="All recorded income including auto interest income"
+          meta={isShopMode ? "All recorded shop income" : "All recorded income including auto interest income"}
         />
         <DashboardCard
           title={t("dashboard.expense")}
           value={formatCurrency(insights.totalExpense)}
           tone="red"
-          meta="All recorded expenses including debt clearance interest"
+          meta={isShopMode ? "All recorded shop expense" : "All recorded expenses including debt clearance interest"}
         />
         <DashboardCard
           title={t("dashboard.activeDebt")}
@@ -312,13 +314,17 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-500">
-                      {formatDisplayDate(item.date, locale)} | Rate {item.rate}% | {item.duration} months
+                      {isShopMode
+                        ? formatDisplayDate(item.date, locale)
+                        : `${formatDisplayDate(item.date, locale)} | Rate ${item.rate}% | ${item.duration} months`}
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-slate-900">{formatCurrency(item.amount)}</p>
                     <p className="text-sm text-slate-500">
-                      {t("dashboard.interest")} {formatCurrency(item.status === "closed" ? item.settled_interest : item.estimated_interest)}
+                      {isShopMode
+                        ? item.status
+                        : `${t("dashboard.interest")} ${formatCurrency(item.status === "closed" ? item.settled_interest : item.estimated_interest)}`}
                     </p>
                   </div>
                 </div>

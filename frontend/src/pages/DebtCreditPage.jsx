@@ -1,6 +1,7 @@
 // src/pages/DebtCreditPage.jsx
 
 import React, { useEffect, useState } from "react";
+import { useAccountMode } from "../accountMode";
 import DebtCreditForm from "../components/DebtCreditForm";
 import DebtCreditTable from "../components/DebtCreditTable";
 import { getAuthHeaders } from "../components/api";
@@ -15,6 +16,7 @@ const formatCurrency = (value) => {
 };
 
 export default function DebtCreditPage() {
+  const { isShopMode } = useAccountMode();
   const { t } = useI18n();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -61,9 +63,11 @@ export default function DebtCreditPage() {
 
   const handleCloseRecord = async (record, closeDate) => {
     const confirmed = window.confirm(
-      record.type === "credit"
-        ? t("debtCreditPage.confirmCredit")
-        : t("debtCreditPage.confirmDebt"),
+      isShopMode
+        ? `Clear this ${record.type} on the selected date?`
+        : record.type === "credit"
+          ? t("debtCreditPage.confirmCredit")
+          : t("debtCreditPage.confirmDebt"),
     );
 
     if (!confirmed) {

@@ -1,28 +1,29 @@
 const express = require("express");
 const pool = require("../../config/db");
-const { getAuthenticatedUserId } = require("../../utils/ownership");
+const { getAuthenticatedAccountMode, getAuthenticatedUserId } = require("../../utils/ownership");
 
 const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
+    const accountMode = getAuthenticatedAccountMode(req);
     const voucherResult = await pool.query(
       `SELECT *
        FROM journal_vouchers
-       WHERE user_id = $1
+       WHERE user_id = $1 AND account_mode = $2
        ORDER BY date DESC, created_at DESC
        LIMIT 200`,
-      [userId]
+      [userId, accountMode]
     );
 
     const lineResult = await pool.query(
       `SELECT jl.*, jv.user_id
        FROM journal_lines jl
        INNER JOIN journal_vouchers jv ON jv.id = jl.voucher_id
-       WHERE jv.user_id = $1
+       WHERE jv.user_id = $1 AND jv.account_mode = $2
        ORDER BY jv.date DESC, jv.created_at DESC, jl.id ASC`,
-      [userId]
+      [userId, accountMode]
     );
 
     const linesByVoucherId = lineResult.rows.reduce((acc, line) => {

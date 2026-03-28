@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useAccountMode } from "../accountMode";
 import { getAuthHeaders } from "../components/api";
 import { formatDisplayDate } from "../utils/dates";
 
@@ -11,6 +12,7 @@ const formatCurrency = (value) => {
 };
 
 export default function PeoplePage() {
+  const { isShopMode } = useAccountMode();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -46,15 +48,21 @@ export default function PeoplePage() {
               <th className="px-3 py-2 text-left text-sm font-semibold">
                 Amount
               </th>
-              <th className="px-3 py-2 text-left text-sm font-semibold">
-                Rate
-              </th>
-              <th className="px-3 py-2 text-left text-sm font-semibold">
-                Duration
-              </th>
-              <th className="px-3 py-2 text-left text-sm font-semibold">
-                Interest
-              </th>
+              {!isShopMode && (
+                <th className="px-3 py-2 text-left text-sm font-semibold">
+                  Rate
+                </th>
+              )}
+              {!isShopMode && (
+                <th className="px-3 py-2 text-left text-sm font-semibold">
+                  Duration
+                </th>
+              )}
+              {!isShopMode && (
+                <th className="px-3 py-2 text-left text-sm font-semibold">
+                  Interest
+                </th>
+              )}
               <th className="px-3 py-2 text-left text-sm font-semibold">
                 Date
               </th>
@@ -72,11 +80,13 @@ export default function PeoplePage() {
                   {tx.type.toUpperCase()}
                 </td>
                 <td className="px-3 py-2">{formatCurrency(tx.amount)}</td>
-                <td className="px-3 py-2">{tx.rate}%</td>
-                <td className="px-3 py-2">{tx.duration}</td>
-                <td className="px-3 py-2">
-                  {formatCurrency(tx.estimated_interest)}
-                </td>
+                {!isShopMode && <td className="px-3 py-2">{tx.rate}%</td>}
+                {!isShopMode && <td className="px-3 py-2">{tx.duration}</td>}
+                {!isShopMode && (
+                  <td className="px-3 py-2">
+                    {formatCurrency(tx.estimated_interest)}
+                  </td>
+                )}
                 <td className="px-3 py-2">
                   {formatDisplayDate(tx.date)}
                 </td>

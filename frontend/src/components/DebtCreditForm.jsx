@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { useAccountMode } from "../accountMode";
 import { getAuthHeaders } from "./api";
 import { useI18n } from "../i18n";
 
 export default function DebtCreditForm({ onSuccess }) {
   const { t } = useI18n();
+  const { isShopMode } = useAccountMode();
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
@@ -35,8 +37,7 @@ export default function DebtCreditForm({ onSuccess }) {
     if (
       !formData.name ||
       !formData.amount ||
-      !formData.rate ||
-      !formData.duration
+      (!isShopMode && (!formData.rate || !formData.duration))
     ) {
       return setError(t("debtCreditForm.fillRequired"));
     }
@@ -51,6 +52,8 @@ export default function DebtCreditForm({ onSuccess }) {
         }),
         body: JSON.stringify({
           ...formData,
+          rate: isShopMode ? 0 : formData.rate,
+          duration: isShopMode ? 0 : formData.duration,
           type,
         }),
       });
@@ -140,34 +143,36 @@ export default function DebtCreditForm({ onSuccess }) {
         </div>
 
         {/* Rate + Duration */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase">
-              {t("debtCreditForm.interestRate")}
-            </label>
+        {!isShopMode && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                {t("debtCreditForm.interestRate")}
+              </label>
 
-            <input
-              type="number"
-              name="rate"
-              value={formData.rate}
-              onChange={handleChange}
-              className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
-          </div>
+              <input
+                type="number"
+                name="rate"
+                value={formData.rate}
+                onChange={handleChange}
+                className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
 
-          <div className="flex flex-col space-y-1">
-            <label className="text-xs font-bold text-gray-500 uppercase">
-              {t("debtCreditForm.duration")}
-            </label>
-            <input
-              type="number"
-              name="duration"
-              value={formData.duration}
-              onChange={handleChange}
-              className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
-            />
+            <div className="flex flex-col space-y-1">
+              <label className="text-xs font-bold text-gray-500 uppercase">
+                {t("debtCreditForm.duration")}
+              </label>
+              <input
+                type="number"
+                name="duration"
+                value={formData.duration}
+                onChange={handleChange}
+                className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+              />
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Notes */}
         <div className="flex flex-col space-y-1">
@@ -184,14 +189,16 @@ export default function DebtCreditForm({ onSuccess }) {
         </div>
 
         {/* Interest Preview */}
-        <div className="flex items-center justify-between rounded-lg border border-green-100 bg-green-50 p-3">
-          <span className="text-sm font-semibold text-green-700">
-            {t("debtCreditForm.estimatedInterest")}
-          </span>
-          <span className="text-lg font-bold text-green-700">
-            {formattedInterest}
-          </span>
-        </div>
+        {!isShopMode && (
+          <div className="flex items-center justify-between rounded-lg border border-green-100 bg-green-50 p-3">
+            <span className="text-sm font-semibold text-green-700">
+              {t("debtCreditForm.estimatedInterest")}
+            </span>
+            <span className="text-lg font-bold text-green-700">
+              {formattedInterest}
+            </span>
+          </div>
+        )}
 
         {/* Error */}
         {error && <p className="text-red-500 text-sm">{error}</p>}
