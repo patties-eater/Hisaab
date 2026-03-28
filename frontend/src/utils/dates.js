@@ -1,4 +1,7 @@
+import { ADToBS } from "bikram-sambat-js";
+
 const NEPAL_TIME_ZONE = "Asia/Kathmandu";
+const NEPALI_DIGITS = ["०", "१", "२", "३", "४", "५", "६", "७", "८", "९"];
 
 function getSafeDate(value) {
   if (!value) {
@@ -9,14 +12,40 @@ function getSafeDate(value) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-export function formatDisplayDate(value, locale = "en-NP") {
+function getActiveLocale(locale) {
+  if (locale) {
+    return locale;
+  }
+
+  if (typeof document !== "undefined" && document.documentElement.lang === "ne") {
+    return "ne-NP";
+  }
+
+  return "en-NP";
+}
+
+function toNepaliDigits(value) {
+  return String(value).replace(/\d/g, (digit) => NEPALI_DIGITS[Number(digit)]);
+}
+
+function formatBsDate(value, locale) {
+  const bsDate = ADToBS(value);
+  return locale === "ne-NP" ? toNepaliDigits(bsDate) : bsDate;
+}
+
+export function formatDisplayDate(value, locale) {
   const date = getSafeDate(value);
+  const activeLocale = getActiveLocale(locale);
 
   if (!date) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat(locale, {
+  if (activeLocale === "ne-NP") {
+    return formatBsDate(date, activeLocale);
+  }
+
+  return new Intl.DateTimeFormat(activeLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -24,14 +53,25 @@ export function formatDisplayDate(value, locale = "en-NP") {
   }).format(date);
 }
 
-export function formatDisplayDateTime(value, locale = "en-NP") {
+export function formatDisplayDateTime(value, locale) {
   const date = getSafeDate(value);
+  const activeLocale = getActiveLocale(locale);
 
   if (!date) {
     return "-";
   }
 
-  return new Intl.DateTimeFormat(locale, {
+  const timePart = new Intl.DateTimeFormat(activeLocale, {
+    hour: "numeric",
+    minute: "2-digit",
+    timeZone: NEPAL_TIME_ZONE,
+  }).format(date);
+
+  if (activeLocale === "ne-NP") {
+    return `${formatBsDate(date, activeLocale)} ${timePart}`;
+  }
+
+  return new Intl.DateTimeFormat(activeLocale, {
     year: "numeric",
     month: "short",
     day: "numeric",
