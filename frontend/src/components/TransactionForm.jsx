@@ -4,11 +4,12 @@ import { useI18n } from "../i18n";
 
 export default function TransactionForm({ onAdd }) {
   const { t } = useI18n();
+  const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState("");
   const [type, setType] = useState("Income");
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
-  const [date, setDate] = useState(""); // optional, defaults to today
+  const [date, setDate] = useState(today);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -19,7 +20,7 @@ export default function TransactionForm({ onAdd }) {
       type,
       title,
       amount: Number(amount),
-      date: date || new Date().toISOString().split("T")[0], // YYYY-MM-DD
+      date: date || today,
     };
 
     onAdd(newTransaction);
@@ -28,7 +29,7 @@ export default function TransactionForm({ onAdd }) {
     setName("");
     setTitle("");
     setAmount("");
-    setDate("");
+    setDate(new Date().toISOString().split("T")[0]);
     setType("Income");
   };
 
