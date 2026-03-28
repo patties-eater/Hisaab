@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { setAuthSession } from "../components/api";
+import { setAuthSession, setStoredLanguage } from "../components/api";
+import { useI18n } from "../i18n";
 
 export default function LoginPage({ setAuthState }) {
+  const { applyLanguage } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [output, setOutput] = useState("");
@@ -22,6 +24,11 @@ export default function LoginPage({ setAuthState }) {
       const data = await res.json();
 
       if (data.token) {
+        if (data.preferredLanguage) {
+          applyLanguage(data.preferredLanguage);
+          setStoredLanguage(data.preferredLanguage);
+        }
+
         setAuthSession({ token: data.token, role: "user" });
         setAuthState({ isLoggedIn: true, role: "user" });
       }

@@ -11,7 +11,9 @@ import {
   getAuthHeaders,
   getAuthToken,
   getStoredRole,
+  setStoredLanguage,
 } from "./components/api";
+import { I18nProvider, useI18n } from "./i18n";
 
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
 const PeoplePage = lazy(() => import("./pages/PeoplePage.jsx"));
@@ -19,6 +21,7 @@ const DebtCrediPage = lazy(() => import("./pages/DebtCreditPage.jsx"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.jsx"));
 const IncomeExpensePage = lazy(() => import("./pages/IncomeExpensePage.jsx"));
 const AuditPage = lazy(() => import("./pages/AuditPage.jsx"));
+const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx"));
 const LoginPage = lazy(() => import("./pages/loginPage.jsx"));
 const RegisterPage = lazy(() => import("./pages/RegisterPage.jsx"));
 const AdminLoginPage = lazy(() => import("./pages/AdminLoginPage.jsx"));
@@ -41,36 +44,41 @@ function adminNavLinkClasses({ isActive }) {
 }
 
 function UserNav({ onLogout }) {
+  const { t } = useI18n();
+
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-md backdrop-blur">
       <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
         <NavLink to="/dashboard" className={navLinkClasses}>
-        Dashboard
+        {t("nav.dashboard")}
         </NavLink>
         <NavLink to="/people" className={navLinkClasses}>
-        People
+        {t("nav.people")}
         </NavLink>
         <NavLink to="/add" className={navLinkClasses}>
-        Add Debt/Credit
+        {t("nav.debtCredit")}
         </NavLink>
         <NavLink
         to="/income-expense"
         className={navLinkClasses}
       >
-        Income/Expense
+        {t("nav.incomeExpense")}
         </NavLink>
         <NavLink to="/analytics" className={navLinkClasses}>
-        Analytics
+        {t("nav.analytics")}
         </NavLink>
         <NavLink to="/audit" className={navLinkClasses}>
-        Audit
+        {t("nav.audit")}
+        </NavLink>
+        <NavLink to="/settings" className={navLinkClasses}>
+        {t("nav.settings")}
         </NavLink>
         <button
           type="button"
           onClick={onLogout}
           className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 md:ml-0"
         >
-          Logout
+          {t("nav.logout")}
         </button>
       </div>
     </nav>
@@ -78,18 +86,20 @@ function UserNav({ onLogout }) {
 }
 
 function AdminNav({ onLogout }) {
+  const { t } = useI18n();
+
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-800 bg-slate-900/95 shadow-md backdrop-blur">
       <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
         <NavLink to="/admin/dashboard" className={adminNavLinkClasses}>
-        Admin Dashboard
+        {t("nav.adminDashboard")}
         </NavLink>
         <button
           type="button"
           onClick={onLogout}
           className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-slate-800 hover:text-rose-200 md:ml-0"
         >
-          Logout
+          {t("nav.logout")}
         </button>
       </div>
     </nav>
@@ -104,7 +114,8 @@ function RouteFallback() {
   );
 }
 
-export default function App() {
+function AppShell() {
+  const { applyLanguage } = useI18n();
   const [authState, setAuthState] = useState({ isLoggedIn: false, role: null });
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
 
@@ -137,6 +148,13 @@ export default function App() {
         }
 
         const role = result.data?.role || storedRole || "user";
+        const preferredLanguage = result.data?.preferredLanguage;
+
+        if (preferredLanguage) {
+          applyLanguage(preferredLanguage);
+          setStoredLanguage(preferredLanguage);
+        }
+
         setAuthState({ isLoggedIn: true, role });
       } catch (err) {
         handleLogout();
@@ -146,7 +164,7 @@ export default function App() {
     };
 
     validateToken();
-  }, []);
+  }, [applyLanguage]);
 
   if (isCheckingAuth) {
     return (
@@ -239,6 +257,10 @@ export default function App() {
                 element={isUser ? <AuditPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
               />
               <Route
+                path="/settings"
+                element={isUser ? <SettingsPage /> : <Navigate to={isAdmin ? "/admin/dashboard" : "/login"} />}
+              />
+              <Route
                 path="/journal-entries"
                 element={<Navigate to="/audit" replace />}
               />
@@ -257,5 +279,13 @@ export default function App() {
         </div>
       </div>
     </Router>
+  );
+}
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppShell />
+    </I18nProvider>
   );
 }

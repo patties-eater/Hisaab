@@ -2,6 +2,7 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../../config/db");
+const authMiddleware = require("../../middlewares/authMiddleware");
 
 const router = express.Router();
 
@@ -74,7 +75,11 @@ router.post("/login", async (req, res) => {
 
     const token = signToken({ id: user.id, role: "user", email: user.email });
 
-    res.json({ message: "Login successful", token });
+    res.json({
+      message: "Login successful",
+      token,
+      preferredLanguage: user.preferred_language || "en",
+    });
   } catch (err) {
     console.error("🔥 Error in login:", err);
     res.status(500).json({ error: "Server error" });
@@ -122,7 +127,43 @@ router.post("/admin/login", async (req, res) => {
   }
 });
 
-router.get("/me", (req, res) => {
+router.patch("/preferences", authMiddleware, async (req, res) => {
+  try {
+    const { language } = req.body;
+
+    if (!["en", "ne"].includes(language)) {
+      return res.status(400).json({ error: "Invalid language preference" });
+    }
+
+    const result = await pool.query(
+      `
+        UPDATE users
+        SET preferred_language = $1
+        WHERE id = $2
+        RETURNING id, email, preferred_language
+      `,
+      [language, req.user.id],
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        email: result.rows[0].email,
+        preferredLanguage: result.rows[0].preferred_language || "en",
+      },
+    });
+  } catch (err) {
+    console.error("Preference update error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+router.get("/me", async (req, res) => {
   const token = req.header("Authorization")?.split(" ")[1];
 
   if (!token) {
@@ -131,6 +172,16 @@ router.get("/me", (req, res) => {
 
   try {
     const verified = jwt.verify(token, process.env.JWT_SECRET);
+    let preferredLanguage = "en";
+
+    if ((verified.role || "user") === "user" && verified.id) {
+      const userResult = await pool.query(
+        "SELECT preferred_language FROM users WHERE id = $1",
+        [verified.id],
+      );
+      preferredLanguage = userResult.rows[0]?.preferred_language || "en";
+    }
+
     res.json({
       success: true,
       data: {
@@ -138,6 +189,7 @@ router.get("/me", (req, res) => {
         role: verified.role || "user",
         email: verified.email || null,
         userId: verified.userId || null,
+        preferredLanguage,
       },
     });
   } catch (err) {

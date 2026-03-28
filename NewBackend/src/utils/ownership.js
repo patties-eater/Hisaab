@@ -2,6 +2,11 @@ const pool = require("../config/db");
 
 async function ensureOwnershipColumns() {
   await pool.query(`
+    ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS preferred_language VARCHAR(5) NOT NULL DEFAULT 'en';
+  `);
+
+  await pool.query(`
     ALTER TABLE transactions
     ADD COLUMN IF NOT EXISTS user_id UUID REFERENCES users(id) ON DELETE CASCADE;
   `);

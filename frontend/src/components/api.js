@@ -7,6 +7,10 @@ export function setAuthSession({ token, role }) {
   localStorage.setItem("role", role);
 }
 
+export function setStoredLanguage(language) {
+  localStorage.setItem("app_language", language);
+}
+
 export function clearAuthSession() {
   localStorage.removeItem("token");
   localStorage.removeItem("role");
