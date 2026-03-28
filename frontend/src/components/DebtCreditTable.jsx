@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useI18n } from "../i18n";
 
 const formatCurrency = (value) => {
   return Number(value || 0).toLocaleString("en-IN", {
@@ -102,33 +103,34 @@ export default function DebtCreditTable({
   onCloseRecord,
   closingRecordId,
 }) {
+  const { t } = useI18n();
   const [closeDates, setCloseDates] = useState({});
 
-  if (loading) return <p className="text-gray-500">Loading records...</p>;
+  if (loading) return <p className="text-gray-500">{t("debtCreditTable.loading")}</p>;
 
   return (
     <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
       <h2 className="text-xl font-bold text-gray-800 mb-4">
-        Debt & Credit Records
+        {t("debtCreditTable.title")}
       </h2>
 
       {records.length === 0 ? (
-        <p className="text-gray-500">No records found.</p>
+        <p className="text-gray-500">{t("debtCreditTable.empty")}</p>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm text-left border-collapse">
             <thead>
               <tr className="border-b">
-                <th className="py-2 px-3">Name</th>
-                <th className="py-2 px-3">Type</th>
-                <th className="py-2 px-3">Amount</th>
-                <th className="py-2 px-3">Rate (%)</th>
-                <th className="py-2 px-3">Duration</th>
-                <th className="py-2 px-3">Interest</th>
-                <th className="py-2 px-3">Date</th>
-                <th className="py-2 px-3">Status</th>
-                <th className="py-2 px-3">Clearance</th>
-                <th className="py-2 px-3">Notes</th>
+                <th className="py-2 px-3">{t("debtCreditTable.name")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.type")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.amount")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.rate")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.duration")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.interest")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.date")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.status")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.clearance")}</th>
+                <th className="py-2 px-3">{t("debtCreditTable.notes")}</th>
               </tr>
             </thead>
             <tbody>
@@ -153,20 +155,22 @@ export default function DebtCreditTable({
                           : "text-green-600"
                       }`}
                     >
-                      {item.type.toUpperCase()}
+                      {item.type === "debt"
+                        ? t("debtCreditPage.totalDebt")
+                        : t("debtCreditPage.totalCredit")}
                     </td>
 
                     <td className="py-2 px-3">{formatCurrency(item.amount)}</td>
 
                     <td className="py-2 px-3">{item.rate}%</td>
 
-                    <td className="py-2 px-3">{item.duration} mo</td>
+                    <td className="py-2 px-3">{item.duration} {t("debtCreditTable.monthsShort")}</td>
 
                     <td className="py-2 px-3">
                       <div>{formatCurrency(item.estimated_interest)}</div>
                       {item.status !== "closed" && (
                         <div className="text-xs text-gray-500">
-                          Close interest: {formatCurrency(previewInterest)}
+                          {t("debtCreditTable.closeInterest")}: {formatCurrency(previewInterest)}
                         </div>
                       )}
                     </td>
@@ -179,17 +183,17 @@ export default function DebtCreditTable({
                       {item.status === "closed" ? (
                         <div className="space-y-1">
                           <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
-                            CLOSED
+                            {t("debtCreditTable.closed")}
                           </span>
                           <div className="text-xs text-gray-500">
                             {item.closed_at
-                              ? `On ${new Date(item.closed_at).toLocaleDateString()}`
+                              ? `${t("debtCreditTable.closedOn")} ${new Date(item.closed_at).toLocaleDateString()}`
                               : ""}
                           </div>
                         </div>
                       ) : (
                         <span className="inline-flex rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-700">
-                          ACTIVE
+                          {t("debtCreditTable.active")}
                         </span>
                       )}
                     </td>
@@ -197,7 +201,9 @@ export default function DebtCreditTable({
                     <td className="py-2 px-3 min-w-[220px]">
                       {item.status === "closed" ? (
                         <div className="text-xs text-gray-600">
-                          Interest {item.type === "credit" ? "added to income" : "added to expense"}:
+                          {item.type === "credit"
+                            ? t("debtCreditTable.creditInterestPosted")
+                            : t("debtCreditTable.debtInterestPosted")}:
                           {" "}
                           {formatCurrency(item.settled_interest)}
                         </div>
@@ -221,14 +227,16 @@ export default function DebtCreditTable({
                             disabled={closingRecordId === item.id}
                             className="w-full rounded-lg bg-slate-900 px-3 py-2 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
                           >
-                            {closingRecordId === item.id ? "Clearing..." : "Clear"}
+                            {closingRecordId === item.id
+                              ? t("debtCreditTable.clearing")
+                              : t("debtCreditTable.clear")}
                           </button>
                         </div>
                       )}
                     </td>
 
                     <td className="py-2 px-3 text-gray-500">
-                      {item.notes || "-"}
+                      {item.notes || t("debtCreditTable.noNotes")}
                     </td>
                   </tr>
                 );

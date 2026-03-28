@@ -3,6 +3,7 @@ import StatCard from "../components/StatCard";
 import TransactionForm from "../components/TransactionForm";
 import TransactionTable from "../components/TransactionTable";
 import { getAuthHeaders } from "../components/api";
+import { useI18n } from "../i18n";
 
 const formatCurrency = (value) =>
   value.toLocaleString("en-IN", {
@@ -12,6 +13,7 @@ const formatCurrency = (value) =>
   });
 
 const IncomeExpensePage = () => {
+  const { t } = useI18n();
   const [transactions, setTransactions] = useState([]);
 
   // Fetch transactions from backend
@@ -67,19 +69,19 @@ const IncomeExpensePage = () => {
     <div className="p-8 space-y-8">
       <div className="grid md:grid-cols-3 gap-6">
         <StatCard
-          title="Total Income"
+          title={t("incomeExpense.totalIncome")}
           value={formatCurrency(totalIncome)}
           icon="💰"
           color="green"
         />
         <StatCard
-          title="Total Expenses"
+          title={t("incomeExpense.totalExpenses")}
           value={formatCurrency(totalExpense)}
           icon="💸"
           color="red"
         />
         <StatCard
-          title="Net Balance"
+          title={t("incomeExpense.netBalance")}
           value={formatCurrency(netBalance)}
           icon={netBalance >= 0 ? "📈" : "📉"}
           color={netBalance >= 0 ? "blue" : "red"}

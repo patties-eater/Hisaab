@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { getAuthHeaders } from "./api";
+import { useI18n } from "../i18n";
 
 export default function DebtCreditForm({ onSuccess }) {
+  const { t } = useI18n();
   const [formData, setFormData] = useState({
     name: "",
     amount: "",
@@ -36,7 +38,7 @@ export default function DebtCreditForm({ onSuccess }) {
       !formData.rate ||
       !formData.duration
     ) {
-      return setError("Please fill all required fields");
+      return setError(t("debtCreditForm.fillRequired"));
     }
 
     setLoading(true);
@@ -68,10 +70,10 @@ export default function DebtCreditForm({ onSuccess }) {
 
         if (onSuccess) onSuccess(); // refresh table
       } else {
-        setError(data.message || "Failed to save");
+        setError(data.message || t("debtCreditForm.saveFailed"));
       }
     } catch (err) {
-      setError("Server error. Try again.");
+      setError(t("debtCreditForm.serverError"));
     }
 
     setLoading(false);
@@ -87,10 +89,10 @@ export default function DebtCreditForm({ onSuccess }) {
     <div className="sticky top-6 max-h-[calc(100vh-8rem)] overflow-hidden self-start rounded-xl border border-gray-100 bg-white p-5 shadow-md">
       <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <h2 className="text-lg font-bold text-gray-800">
-          Add Debt / Credit
+          {t("debtCreditForm.title")}
         </h2>
         <span className="rounded-full bg-slate-100 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-slate-600">
-          Entry
+          {t("debtCreditForm.badge")}
         </span>
       </div>
 
@@ -98,7 +100,7 @@ export default function DebtCreditForm({ onSuccess }) {
         {/* name */}
         <div className="flex flex-col space-y-1">
           <label className="text-xs font-bold text-gray-500 uppercase">
-            Name
+            {t("debtCreditForm.name")}
           </label>
           <textarea
             name="name"
@@ -112,7 +114,7 @@ export default function DebtCreditForm({ onSuccess }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">
-              Amount
+              {t("debtCreditForm.amount")}
             </label>
             <input
               type="number"
@@ -125,7 +127,7 @@ export default function DebtCreditForm({ onSuccess }) {
 
           <div className="flex flex-col space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">
-              Date
+              {t("debtCreditForm.date")}
             </label>
             <input
               type="date"
@@ -141,7 +143,7 @@ export default function DebtCreditForm({ onSuccess }) {
         <div className="grid grid-cols-2 gap-4">
           <div className="flex flex-col space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">
-              Interest Rate (%)
+              {t("debtCreditForm.interestRate")}
             </label>
 
             <input
@@ -155,7 +157,7 @@ export default function DebtCreditForm({ onSuccess }) {
 
           <div className="flex flex-col space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">
-              Duration (Months)
+              {t("debtCreditForm.duration")}
             </label>
             <input
               type="number"
@@ -170,7 +172,7 @@ export default function DebtCreditForm({ onSuccess }) {
         {/* Notes */}
         <div className="flex flex-col space-y-1">
           <label className="text-xs font-bold text-gray-500 uppercase">
-            Notes
+            {t("debtCreditForm.notes")}
           </label>
           <textarea
             name="notes"
@@ -184,7 +186,7 @@ export default function DebtCreditForm({ onSuccess }) {
         {/* Interest Preview */}
         <div className="flex items-center justify-between rounded-lg border border-green-100 bg-green-50 p-3">
           <span className="text-sm font-semibold text-green-700">
-            Estimated Interest
+            {t("debtCreditForm.estimatedInterest")}
           </span>
           <span className="text-lg font-bold text-green-700">
             {formattedInterest}
@@ -201,7 +203,7 @@ export default function DebtCreditForm({ onSuccess }) {
             disabled={loading}
             className="rounded-lg bg-red-500 py-2.5 font-bold text-white transition hover:bg-red-600"
           >
-            {loading ? "Saving..." : "Save Debt"}
+            {loading ? t("debtCreditForm.saving") : t("debtCreditForm.saveDebt")}
           </button>
 
           <button
@@ -209,7 +211,7 @@ export default function DebtCreditForm({ onSuccess }) {
             disabled={loading}
             className="rounded-lg bg-green-500 py-2.5 font-bold text-white transition hover:bg-green-600"
           >
-            {loading ? "Saving..." : "Save Credit"}
+            {loading ? t("debtCreditForm.saving") : t("debtCreditForm.saveCredit")}
           </button>
         </div>
       </div>

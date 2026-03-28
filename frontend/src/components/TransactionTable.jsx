@@ -1,4 +1,5 @@
 // TransactionTable.jsx
+import { useI18n } from "../i18n";
 
 const formatCurrency = (value) => {
   return value.toLocaleString("en-IN", {
@@ -9,19 +10,21 @@ const formatCurrency = (value) => {
 };
 
 const TransactionTable = ({ transactions }) => {
+  const { t } = useI18n();
+
   return (
     <div className="bg-white rounded-xl shadow-md border">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-bold">Recent Transactions</h2>
+        <h2 className="text-xl font-bold">{t("transactionTable.title")}</h2>
       </div>
 
       <table className="w-full text-left">
         <thead className="bg-gray-50">
           <tr>
-            <th className="p-4">Name</th>
-            <th className="p-4">Date</th>
-            <th className="p-4">Details</th>
-            <th className="p-4 text-right">Amount</th>
+            <th className="p-4">{t("transactionTable.name")}</th>
+            <th className="p-4">{t("transactionTable.date")}</th>
+            <th className="p-4">{t("transactionTable.details")}</th>
+            <th className="p-4 text-right">{t("transactionTable.amount")}</th>
           </tr>
         </thead>
 
@@ -31,11 +34,13 @@ const TransactionTable = ({ transactions }) => {
               <td className="p-4">{tx.name}</td>
               <td className="p-4">{tx.date}</td>
               <td className="p-4">
-                <div>{tx.title || "-"}</div>
+                <div>{tx.title || t("transactionTable.noTitle")}</div>
                 <div className="text-xs text-gray-500">
                   {tx.debt_credit_id
-                    ? "Created from debt/credit clearance"
-                    : tx.type}
+                    ? t("transactionTable.createdFromClearance")
+                    : tx.type === "Income"
+                      ? t("transactionForm.income")
+                      : t("transactionForm.expense")}
                 </div>
               </td>
               <td

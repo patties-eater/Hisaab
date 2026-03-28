@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import DebtCreditForm from "../components/DebtCreditForm";
 import DebtCreditTable from "../components/DebtCreditTable";
 import { getAuthHeaders } from "../components/api";
+import { useI18n } from "../i18n";
 
 const formatCurrency = (value) => {
   return Number(value).toLocaleString("en-IN", {
@@ -14,6 +15,7 @@ const formatCurrency = (value) => {
 };
 
 export default function DebtCreditPage() {
+  const { t } = useI18n();
   const [records, setRecords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [closingRecordId, setClosingRecordId] = useState(null);
@@ -32,7 +34,7 @@ export default function DebtCreditPage() {
       }
     } catch (err) {
       console.error("Fetch error:", err);
-      setError("Could not load debt/credit records.");
+      setError(t("debtCreditPage.loadError"));
     } finally {
       setLoading(false);
     }
@@ -59,9 +61,9 @@ export default function DebtCreditPage() {
 
   const handleCloseRecord = async (record, closeDate) => {
     const confirmed = window.confirm(
-      `Clear this ${record.type} for ${record.name} on ${closeDate}? Interest will be posted automatically to ${
-        record.type === "credit" ? "Income" : "Expense"
-      }.`,
+      record.type === "credit"
+        ? t("debtCreditPage.confirmCredit")
+        : t("debtCreditPage.confirmDebt"),
     );
 
     if (!confirmed) {
@@ -83,14 +85,14 @@ export default function DebtCreditPage() {
       const data = await res.json();
 
       if (!data.success) {
-        setError(data.message || "Could not clear this record.");
+        setError(data.message || t("debtCreditPage.clearError"));
         return;
       }
 
       await fetchRecords();
     } catch (err) {
       console.error("Close record error:", err);
-      setError("Could not clear this record.");
+      setError(t("debtCreditPage.clearError"));
     } finally {
       setClosingRecordId(null);
     }
@@ -102,7 +104,7 @@ export default function DebtCreditPage() {
       <div className="grid md:grid-cols-3 gap-6">
         <div className="bg-red-50 p-6 rounded-xl border border-red-100">
           <h3 className="text-sm font-bold text-red-600 uppercase">
-            Total Debt
+            {t("debtCreditPage.totalDebt")}
           </h3>
           <p className="text-2xl font-bold text-red-700 mt-2">
             {formatCurrency(totalDebt)}
@@ -111,7 +113,7 @@ export default function DebtCreditPage() {
 
         <div className="bg-green-50 p-6 rounded-xl border border-green-100">
           <h3 className="text-sm font-bold text-green-600 uppercase">
-            Total Credit
+            {t("debtCreditPage.totalCredit")}
           </h3>
           <p className="text-2xl font-bold text-green-700 mt-2">
             {formatCurrency(totalCredit)}
@@ -120,7 +122,7 @@ export default function DebtCreditPage() {
 
         <div className="bg-blue-50 p-6 rounded-xl border border-blue-100">
           <h3 className="text-sm font-bold text-blue-600 uppercase">
-            Net Position
+            {t("debtCreditPage.netPosition")}
           </h3>
           <p
             className={`text-2xl font-bold mt-2 ${
