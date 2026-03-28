@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { getAuthHeaders } from "../components/api";
+import { formatDisplayDate } from "../utils/dates";
 
 const AUDIT_SECTIONS = [
   {
@@ -175,7 +176,7 @@ function JournalPanel() {
                   </p>
                 </div>
                 <div className="text-sm text-slate-500">
-                  {new Date(voucher.date).toLocaleDateString()}
+                  {formatDisplayDate(voucher.date)}
                 </div>
               </div>
 

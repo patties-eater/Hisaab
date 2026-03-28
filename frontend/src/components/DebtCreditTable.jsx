@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useI18n } from "../i18n";
+import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) => {
   return Number(value || 0).toLocaleString("en-IN", {
@@ -103,7 +104,8 @@ export default function DebtCreditTable({
   onCloseRecord,
   closingRecordId,
 }) {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
+  const locale = language === "ne" ? "ne-NP" : "en-NP";
   const [closeDates, setCloseDates] = useState({});
 
   if (loading) return <p className="text-gray-500">{t("debtCreditTable.loading")}</p>;
@@ -176,7 +178,7 @@ export default function DebtCreditTable({
                     </td>
 
                     <td className="py-2 px-3">
-                      {new Date(item.date).toLocaleDateString()}
+                      {formatDisplayDate(item.date, locale)}
                     </td>
 
                     <td className="py-2 px-3">
@@ -187,7 +189,7 @@ export default function DebtCreditTable({
                           </span>
                           <div className="text-xs text-gray-500">
                             {item.closed_at
-                              ? `${t("debtCreditTable.closedOn")} ${new Date(item.closed_at).toLocaleDateString()}`
+                              ? `${t("debtCreditTable.closedOn")} ${formatDisplayDate(item.closed_at, locale)}`
                               : ""}
                           </div>
                         </div>

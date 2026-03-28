@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAuthHeaders } from "../components/api";
+import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) => {
   return Number(value).toLocaleString("en-IN", {
@@ -77,7 +78,7 @@ export default function PeoplePage() {
                   {formatCurrency(tx.estimated_interest)}
                 </td>
                 <td className="px-3 py-2">
-                  {new Date(tx.date).toLocaleDateString()}
+                  {formatDisplayDate(tx.date)}
                 </td>
                 <td className="px-3 py-2">{tx.notes || "-"}</td>
               </tr>

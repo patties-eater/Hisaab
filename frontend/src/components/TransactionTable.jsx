@@ -1,5 +1,6 @@
 // TransactionTable.jsx
 import { useI18n } from "../i18n";
+import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) => {
   return value.toLocaleString("en-IN", {
@@ -10,7 +11,8 @@ const formatCurrency = (value) => {
 };
 
 const TransactionTable = ({ transactions }) => {
-  const { t } = useI18n();
+  const { language, t } = useI18n();
+  const locale = language === "ne" ? "ne-NP" : "en-NP";
 
   return (
     <div className="bg-white rounded-xl shadow-md border">
@@ -32,7 +34,7 @@ const TransactionTable = ({ transactions }) => {
           {transactions.map((tx) => (
             <tr key={tx.id}>
               <td className="p-4">{tx.name}</td>
-              <td className="p-4">{tx.date}</td>
+              <td className="p-4">{formatDisplayDate(tx.date, locale)}</td>
               <td className="p-4">
                 <div>{tx.title || t("transactionTable.noTitle")}</div>
                 <div className="text-xs text-gray-500">

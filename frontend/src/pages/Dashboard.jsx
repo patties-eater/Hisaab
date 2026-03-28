@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { getAuthHeaders } from "../components/api";
+import { useI18n } from "../i18n";
+import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) =>
   Number(value || 0).toLocaleString("en-IN", {
@@ -56,6 +58,8 @@ function QuickLink({ to, title, hint }) {
 }
 
 export default function Dashboard() {
+  const { language, t } = useI18n();
+  const locale = language === "ne" ? "ne-NP" : "en-NP";
   const [dashboardData, setDashboardData] = useState({
     incomeTotal: 0,
     expenseTotal: 0,
@@ -143,7 +147,7 @@ export default function Dashboard() {
   );
 
   if (loading) {
-    return <div className="p-8 text-slate-500">Loading dashboard...</div>;
+    return <div className="p-8 text-slate-500">{t("dashboard.loading")}</div>;
   }
 
   return (
@@ -156,25 +160,25 @@ export default function Dashboard() {
 
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
         <DashboardCard
-          title="Income"
+          title={t("dashboard.income")}
           value={formatCurrency(insights.totalIncome)}
           tone="green"
           meta="All recorded income including auto interest income"
         />
         <DashboardCard
-          title="Expenses"
+          title={t("dashboard.expense")}
           value={formatCurrency(insights.totalExpense)}
           tone="red"
           meta="All recorded expenses including debt clearance interest"
         />
         <DashboardCard
-          title="Active Debt"
+          title={t("dashboard.activeDebt")}
           value={formatCurrency(insights.totalDebt)}
           tone="amber"
           meta={`${insights.activeCount} active debt/credit records right now`}
         />
         <DashboardCard
-          title="Active Credit"
+          title={t("dashboard.activeCredit")}
           value={formatCurrency(insights.totalCredit)}
           tone="blue"
           meta={`${insights.closedCount} records already cleared and closed`}
@@ -184,18 +188,18 @@ export default function Dashboard() {
       <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
         <SectionCard
           title="Recent Transactions"
-          subtitle="Latest income and expense movements"
+          subtitle={t("dashboard.recentTransactionsHint")}
           action={
             <NavLink
               to="/income-expense"
               className="text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
-              View all
+              {t("dashboard.viewAll")}
             </NavLink>
           }
         >
           {recentTransactions.length === 0 ? (
-            <p className="text-sm text-slate-500">No transactions yet.</p>
+            <p className="text-sm text-slate-500">{t("dashboard.noTransactions")}</p>
           ) : (
             <div className="space-y-3">
               {recentTransactions.map((item) => (
@@ -206,7 +210,7 @@ export default function Dashboard() {
                   <div>
                     <p className="font-semibold text-slate-900">{item.title || item.name || "Transaction"}</p>
                     <p className="text-sm text-slate-500">
-                      {item.name || "General"} | {new Date(item.date).toLocaleDateString()}
+                      {item.name || "General"} | {formatDisplayDate(item.date, locale)}
                     </p>
                   </div>
                   <div
@@ -222,41 +226,41 @@ export default function Dashboard() {
           )}
         </SectionCard>
 
-        <SectionCard title="Quick Health" subtitle="Simple checks from your current numbers">
+        <SectionCard title={t("dashboard.quickHealth")} subtitle={t("dashboard.quickHealthHint")}>
           <div className="space-y-4">
             <div className="rounded-2xl bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold text-slate-700">Expense load</p>
+              <p className="text-sm font-semibold text-slate-700">{t("dashboard.expenseLoad")}</p>
               <p className="mt-2 text-2xl font-black text-slate-900">
                 {insights.incomeVsExpense}%
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                of income currently covered by expenses
+                {t("dashboard.incomeCoveredByExpense")}
               </p>
             </div>
             <div className="rounded-2xl bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold text-slate-700">Cash direction</p>
+              <p className="text-sm font-semibold text-slate-700">{t("dashboard.cashDirection")}</p>
               <p
                 className={`mt-2 text-2xl font-black ${
                   insights.netCash >= 0 ? "text-emerald-600" : "text-rose-600"
                 }`}
               >
-                {insights.netCash >= 0 ? "Positive" : "Negative"}
+                {insights.netCash >= 0 ? t("dashboard.positive") : t("dashboard.negative")}
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Based on income minus expense totals
+                {t("dashboard.cashDirectionHint")}
               </p>
             </div>
             <div className="rounded-2xl bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold text-slate-700">Debt/Credit direction</p>
+              <p className="text-sm font-semibold text-slate-700">{t("dashboard.debtCreditDirection")}</p>
               <p
                 className={`mt-2 text-2xl font-black ${
                   insights.netPosition >= 0 ? "text-emerald-600" : "text-amber-600"
                 }`}
               >
-                {insights.netPosition >= 0 ? "Credit Heavy" : "Debt Heavy"}
+                {insights.netPosition >= 0 ? t("dashboard.creditHeavy") : t("dashboard.debtHeavy")}
               </p>
               <p className="mt-1 text-sm text-slate-500">
-                Net position = active credit minus active debt
+                {t("dashboard.debtCreditDirectionHint")}
               </p>
             </div>
           </div>
@@ -265,19 +269,19 @@ export default function Dashboard() {
 
       <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
         <SectionCard
-          title="Recent Debt / Credit"
-          subtitle="Latest records and their current state"
+          title={t("dashboard.recentDebtCredit")}
+          subtitle={t("dashboard.recentDebtCreditHint")}
           action={
             <NavLink
               to="/add"
               className="text-sm font-semibold text-blue-600 hover:text-blue-700"
             >
-              Open DR/CR
+              {t("dashboard.openDrCr")}
             </NavLink>
           }
         >
           {recentDebtCredit.length === 0 ? (
-            <p className="text-sm text-slate-500">No debt or credit records yet.</p>
+            <p className="text-sm text-slate-500">{t("dashboard.noDebtCredit")}</p>
           ) : (
             <div className="space-y-3">
               {recentDebtCredit.map((item) => (
@@ -308,13 +312,13 @@ export default function Dashboard() {
                       </span>
                     </div>
                     <p className="text-sm text-slate-500">
-                      {new Date(item.date).toLocaleDateString()} | Rate {item.rate}% | {item.duration} months
+                      {formatDisplayDate(item.date, locale)} | Rate {item.rate}% | {item.duration} months
                     </p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-slate-900">{formatCurrency(item.amount)}</p>
                     <p className="text-sm text-slate-500">
-                      Interest {formatCurrency(item.status === "closed" ? item.settled_interest : item.estimated_interest)}
+                      {t("dashboard.interest")} {formatCurrency(item.status === "closed" ? item.settled_interest : item.estimated_interest)}
                     </p>
                   </div>
                 </div>
@@ -323,22 +327,22 @@ export default function Dashboard() {
           )}
         </SectionCard>
 
-        <SectionCard title="Action Queue" subtitle="Useful next steps from here">
+        <SectionCard title={t("dashboard.actionQueue")} subtitle={t("dashboard.actionQueueHint")}>
           <div className="grid gap-3">
             <QuickLink
               to="/add"
-              title="Clear Due DR/CR"
-              hint="Finish active debt or credit and post interest automatically"
+              title={t("dashboard.clearDue")}
+              hint={t("dashboard.clearDueHint")}
             />
             <QuickLink
               to="/income-expense"
-              title="Add Today's Cash Movement"
-              hint="Keep income and expense up to date"
+              title={t("dashboard.addCashMovement")}
+              hint={t("dashboard.addCashMovementHint")}
             />
             <QuickLink
               to="/audit"
-              title="Review Journal"
-              hint="Check accounting vouchers and audit subsections"
+              title={t("dashboard.reviewJournal")}
+              hint={t("dashboard.reviewJournalHint")}
             />
           </div>
         </SectionCard>

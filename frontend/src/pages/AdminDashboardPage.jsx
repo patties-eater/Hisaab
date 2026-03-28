@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getAuthHeaders } from "../components/api";
+import { formatDisplayDateTime } from "../utils/dates";
 
 function StatCard({ label, value }) {
   return (
@@ -292,7 +293,7 @@ export default function AdminDashboardPage() {
                     <div>{user.email}</div>
                     <div className="mt-1 text-xs text-slate-500">{user.id}</div>
                   </td>
-                  <td className="px-6 py-4">{new Date(user.created_at).toLocaleString()}</td>
+                  <td className="px-6 py-4">{formatDisplayDateTime(user.created_at)}</td>
                   <td className="px-6 py-4">{user.transactions_count}</td>
                   <td className="px-6 py-4">{user.debt_credit_count}</td>
                   <td className="px-6 py-4">
