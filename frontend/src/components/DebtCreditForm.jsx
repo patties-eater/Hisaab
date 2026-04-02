@@ -28,7 +28,7 @@ export default function DebtCreditForm({ onSuccess }) {
     const amount = parseFloat(formData.amount) || 0;
     const rate = parseFloat(formData.rate) || 0;
     const duration = parseFloat(formData.duration) || 0;
-    return amount * (rate / 100) * duration;
+    return amount * (rate / 100) * (duration / 12);
   };
 
   const handleSubmit = async (type) => {

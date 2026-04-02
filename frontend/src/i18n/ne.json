@@ -103,7 +103,7 @@
     "name": "नाम",
     "amount": "रकम",
     "date": "मिति",
-    "interestRate": "ब्याज दर (%)",
+    "interestRate": "वार्षिक ब्याज दर (%)",
     "duration": "अवधि (महिना)",
     "notes": "टिप्पणी",
     "estimatedInterest": "अनुमानित ब्याज",

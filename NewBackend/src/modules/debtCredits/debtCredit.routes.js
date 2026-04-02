@@ -81,7 +81,7 @@ function calculateSettledInterest(recordDate, closingDate, amount, rate, duratio
     return null;
   }
 
-  return Number((amount * (rate / 100) * elapsedMonths).toFixed(2));
+  return Number((amount * (rate / 100) * (elapsedMonths / 12)).toFixed(2));
 }
 
 router.get("/", async (req, res) => {
@@ -122,7 +122,7 @@ router.post("/", async (req, res) => {
     const numericRate = accountMode === "shop" ? 0 : Number(rate);
     const numericDuration = accountMode === "shop" ? 0 : Number(duration);
     const estimatedInterest =
-      numericAmount * (numericRate / 100) * numericDuration;
+      numericAmount * (numericRate / 100) * (numericDuration / 12);
     const recordDate = date || formatDateOnly(new Date());
 
     await client.query("BEGIN");
@@ -285,7 +285,7 @@ router.post("/:id/close", async (req, res) => {
       const transactionTitle = `${record.type === "credit" ? "Credit" : "Debt"} clearance interest`;
 
       const transactionResult = await client.query(
-        `INSERT INTO transactions (name, type, title, amount, date, user_id, debt_credit_id)
+        `INSERT INTO transactions (name, type, title, amount, date, user_id, debt_credit_id, account_mode)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          RETURNING *`,
         [

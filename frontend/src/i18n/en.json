@@ -103,7 +103,7 @@
     "name": "Name",
     "amount": "Amount",
     "date": "Date",
-    "interestRate": "Interest Rate (%)",
+    "interestRate": "Annual Interest Rate (%)",
     "duration": "Duration (Months)",
     "notes": "Notes",
     "estimatedInterest": "Estimated Interest",
@@ -177,6 +177,19 @@
     "credit": "Credit",
     "lineNotes": "Notes",
     "voucherTotal": "Voucher Total",
-    "noNotes": "-"
+    "noNotes": "-",
+    "totalAccounts": "Total Accounts",
+    "noLedgerAccounts": "No ledger accounts found.",
+    "closingBalance": "Closing Balance",
+    "dateLabel": "Date",
+    "descriptionLabel": "Description",
+    "balance": "Balance",
+    "receipts": "Receipts",
+    "payments": "Payments",
+    "noCashEntries": "No cash entries found.",
+    "noBankEntries": "No bank entries found.",
+    "noTrialBalance": "No trial balance data found.",
+    "closingDebit": "Closing Debit",
+    "closingCredit": "Closing Credit"
   }
 }

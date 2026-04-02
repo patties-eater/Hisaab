@@ -94,7 +94,7 @@ const calculateInterestByDate = (item, closeDate) => {
     (
       Number(item.amount || 0) *
       (Number(item.rate || 0) / 100) *
-      elapsedMonths
+      (elapsedMonths / 12)
     ).toFixed(2),
   );
 };
