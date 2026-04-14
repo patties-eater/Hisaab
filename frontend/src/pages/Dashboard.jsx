@@ -288,43 +288,85 @@ export default function Dashboard() {
               {recentDebtCredit.map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
+                  className="rounded-2xl border border-slate-100 bg-gradient-to-br from-white to-slate-50 px-4 py-4 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-200 hover:shadow-md"
                 >
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <p className="font-semibold text-slate-900">{item.name}</p>
-                      <span
-                        className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase ${
-                          item.type === "debt"
-                            ? "bg-rose-50 text-rose-700"
-                            : "bg-emerald-50 text-emerald-700"
-                        }`}
-                      >
-                        {item.type}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-1 text-[11px] font-bold uppercase ${
-                          item.status === "closed"
-                            ? "bg-slate-100 text-slate-700"
-                            : "bg-sky-50 text-sky-700"
-                        }`}
-                      >
-                        {item.status || "active"}
-                      </span>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-base font-bold text-slate-900 sm:text-lg">
+                          {item.name}
+                        </p>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.15em] ${
+                            item.type === "debt"
+                              ? "bg-rose-50 text-rose-700"
+                              : "bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {item.type}
+                        </span>
+                        <span
+                          className={`rounded-full px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.15em] ${
+                            item.status === "closed"
+                              ? "bg-slate-100 text-slate-700"
+                              : "bg-sky-50 text-sky-700"
+                          }`}
+                        >
+                          {item.status || "active"}
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-sm text-slate-500">
+                        <span>{item.phone || "-"}</span>
+                        <span className="h-1 w-1 rounded-full bg-slate-300" />
+                        <span>{formatDisplayDate(item.date, locale)}</span>
+                        {!isShopMode && (
+                          <>
+                            <span className="h-1 w-1 rounded-full bg-slate-300" />
+                            <span>
+                              {t("dashboard.rate")} {item.rate}%
+                            </span>
+                            <span className="h-1 w-1 rounded-full bg-slate-300" />
+                            <span>
+                              {item.duration} {t("debtCreditTable.monthsShort")}
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {item.notes ? (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                            {item.notes}
+                          </span>
+                        ) : null}
+                        {item.status === "closed" && item.closed_at ? (
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                            {t("debtCreditTable.closedOn")} {formatDisplayDate(item.closed_at, locale)}
+                          </span>
+                        ) : null}
+                      </div>
                     </div>
-                    <p className="text-sm text-slate-500">
-                      {isShopMode
-                        ? formatDisplayDate(item.date, locale)
-                        : `${formatDisplayDate(item.date, locale)} | Rate ${item.rate}% | ${item.duration} months`}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-bold text-slate-900">{formatCurrency(item.amount)}</p>
-                    <p className="text-sm text-slate-500">
-                      {isShopMode
-                        ? item.status
-                        : `${t("dashboard.interest")} ${formatCurrency(item.status === "closed" ? item.settled_interest : item.estimated_interest)}`}
-                    </p>
+
+                    <div className="flex shrink-0 flex-col items-start gap-2 sm:items-end">
+                      <p className="text-xl font-black text-slate-900 sm:text-2xl">
+                        {formatCurrency(item.amount)}
+                      </p>
+                      <div className="rounded-2xl bg-white px-3 py-2 text-right shadow-sm ring-1 ring-slate-100">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400">
+                          {t("dashboard.interest")}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-slate-700">
+                          {isShopMode
+                            ? item.status
+                            : formatCurrency(
+                                item.status === "closed"
+                                  ? item.settled_interest
+                                  : item.estimated_interest,
+                              )}
+                        </p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
