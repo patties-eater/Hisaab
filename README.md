@@ -39,6 +39,13 @@ npm run dev
 
 Set `VITE_API_BASE_URL` if the backend is not running on `http://localhost:5000`.
 
+If you are keeping Supabase in the browser for any future direct client work, use the Vite names:
+
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_PUBLISHABLE_KEY`
+
+For the current app, the frontend should still point to your backend API.
+
 Run:
 
 ```bash
@@ -46,6 +53,15 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Supabase Deployment
+
+If you move PostgreSQL to Supabase:
+
+1. Run the schema SQL in the Supabase SQL editor.
+2. Update `NewBackend/.env` with the Supabase `DATABASE_URL`.
+3. Keep the frontend pointed at the backend with `VITE_API_BASE_URL`.
+4. Deploy backend and frontend separately.
 
 ## Release notes
 
