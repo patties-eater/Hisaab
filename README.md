@@ -63,6 +63,23 @@ If you move PostgreSQL to Supabase:
 3. Keep the frontend pointed at the backend with `VITE_API_BASE_URL`.
 4. Deploy backend and frontend separately.
 
+## Render Backend Setup
+
+For Render, point the backend service at `NewBackend` and use:
+
+- Build command: `npm install`
+- Start command: `npm start`
+
+Set these environment variables in Render:
+
+- `DATABASE_URL` from Supabase
+- `JWT_SECRET`
+- `ADMIN_USER_ID` if you use the admin login
+- `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
+- `PORT` can stay default or use the one Render provides
+
+Then set the frontend `VITE_API_BASE_URL` to the deployed backend URL.
+
 ## Release notes
 
 - The frontend now uses a configurable API base URL instead of hard-coded localhost calls.
