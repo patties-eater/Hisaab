@@ -109,12 +109,12 @@ router.post("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
     const accountMode = getAuthenticatedAccountMode(req);
-    const { name, type, amount, rate, duration, date, notes } = req.body;
+    const { name, phone, type, amount, rate, duration, date, notes } = req.body;
 
-    if (!name || !type || !amount || (accountMode === "personal" && (!rate || !duration))) {
+    if (!name || !phone || !type || !amount || (accountMode === "personal" && (!rate || !duration))) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields",
+        message: !phone ? "Phone number is required" : "Missing required fields",
       });
     }
 
@@ -129,11 +129,12 @@ router.post("/", async (req, res) => {
 
     const result = await client.query(
       `INSERT INTO debt_credit
-       (name, type, amount, rate, duration, estimated_interest, date, notes, user_id, status, account_mode)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'active', $10)
+       (name, phone, type, amount, rate, duration, estimated_interest, date, notes, user_id, status, account_mode)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 'active', $11)
        RETURNING *`,
       [
         name,
+        phone,
         type,
         numericAmount,
         numericRate,

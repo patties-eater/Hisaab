@@ -141,6 +141,9 @@ export default function DebtCreditTable({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-sm font-bold text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.phone || t("debtCreditTable.noPhone")}
+                      </p>
                       <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">
                         {item.type === "debt"
                           ? t("debtCreditPage.totalDebt")
@@ -263,6 +266,7 @@ export default function DebtCreditTable({
             <thead>
               <tr className="border-b bg-slate-50">
                 <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.name")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.phone")}</th>
                 <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.type")}</th>
                 <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.amount")}</th>
                 {!isShopMode && <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.rate")}</th>}
@@ -289,6 +293,7 @@ export default function DebtCreditTable({
                     className="border-b align-top transition hover:bg-gray-50"
                   >
                     <td className="px-3 py-3">{item.name}</td>
+                    <td className="px-3 py-3 text-gray-600">{item.phone || t("debtCreditTable.noPhone")}</td>
                     <td
                       className={`px-3 py-3 font-semibold ${
                         item.type === "debt"

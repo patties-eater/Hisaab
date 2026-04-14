@@ -33,6 +33,11 @@ async function ensureOwnershipColumns() {
 
   await pool.query(`
     ALTER TABLE debt_credit
+    ADD COLUMN IF NOT EXISTS phone VARCHAR(50);
+  `);
+
+  await pool.query(`
+    ALTER TABLE debt_credit
     ADD COLUMN IF NOT EXISTS account_mode VARCHAR(20) NOT NULL DEFAULT 'personal';
   `);
 

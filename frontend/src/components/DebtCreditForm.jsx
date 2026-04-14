@@ -8,6 +8,7 @@ export default function DebtCreditForm({ onSuccess }) {
   const { isShopMode } = useAccountMode();
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     amount: "",
     rate: "",
     duration: "",
@@ -36,10 +37,15 @@ export default function DebtCreditForm({ onSuccess }) {
 
     if (
       !formData.name ||
+      !formData.phone ||
       !formData.amount ||
       (!isShopMode && (!formData.rate || !formData.duration))
     ) {
-      return setError(t("debtCreditForm.fillRequired"));
+      return setError(
+        !formData.phone
+          ? t("debtCreditForm.phoneRequired")
+          : t("debtCreditForm.fillRequired"),
+      );
     }
 
     setLoading(true);
@@ -64,6 +70,7 @@ export default function DebtCreditForm({ onSuccess }) {
         // Reset form
         setFormData({
           name: "",
+          phone: "",
           amount: "",
           rate: "",
           duration: "",
@@ -117,6 +124,23 @@ export default function DebtCreditForm({ onSuccess }) {
             onChange={handleChange}
             className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
+        </div>
+
+        <div className="flex flex-col space-y-1">
+          <label className="text-xs font-bold text-gray-500 uppercase">
+            {t("debtCreditForm.phone")}
+          </label>
+          <input
+            type="tel"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+            placeholder={t("debtCreditForm.phonePlaceholder")}
+            className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+          />
+          <p className="text-xs text-gray-400">
+            {t("debtCreditForm.phoneHint")}
+          </p>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
