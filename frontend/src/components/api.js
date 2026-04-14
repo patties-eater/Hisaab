@@ -1,6 +1,6 @@
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ||
-  (import.meta.env.DEV ? "https://hisaab-2.onrender.com" : "");
+  (import.meta.env.DEV ? "http://localhost:5000" : "");
 
 export function apiUrl(path) {
   if (/^https?:\/\//i.test(path)) {
