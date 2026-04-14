@@ -164,31 +164,31 @@ export default function Dashboard() {
           title={t("dashboard.income")}
           value={formatCurrency(insights.totalIncome)}
           tone="green"
-          meta={isShopMode ? "All recorded shop income" : "All recorded income including auto interest income"}
+          meta={isShopMode ? t("dashboard.incomeMetaShop") : t("dashboard.incomeMetaPersonal")}
         />
         <DashboardCard
           title={t("dashboard.expense")}
           value={formatCurrency(insights.totalExpense)}
           tone="red"
-          meta={isShopMode ? "All recorded shop expense" : "All recorded expenses including debt clearance interest"}
+          meta={isShopMode ? t("dashboard.expenseMetaShop") : t("dashboard.expenseMetaPersonal")}
         />
         <DashboardCard
           title={t("dashboard.activeDebt")}
           value={formatCurrency(insights.totalDebt)}
           tone="amber"
-          meta={`${insights.activeCount} active debt/credit records right now`}
+          meta={`${insights.activeCount} ${t("dashboard.activeRecords")}`}
         />
         <DashboardCard
           title={t("dashboard.activeCredit")}
           value={formatCurrency(insights.totalCredit)}
           tone="blue"
-          meta={`${insights.closedCount} records already cleared and closed`}
+          meta={`${insights.closedCount} ${t("dashboard.closedRecords")}`}
         />
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <SectionCard
-          title="Recent Transactions"
+          title={t("dashboard.recentTransactions")}
           subtitle={t("dashboard.recentTransactionsHint")}
           action={
             <NavLink
@@ -209,9 +209,9 @@ export default function Dashboard() {
                   className="flex items-center justify-between rounded-2xl border border-slate-100 px-4 py-3"
                 >
                   <div>
-                    <p className="font-semibold text-slate-900">{item.title || item.name || "Transaction"}</p>
+                    <p className="font-semibold text-slate-900">{item.title || item.name || t("dashboard.transactionFallback")}</p>
                     <p className="text-sm text-slate-500">
-                      {item.name || "General"} | {formatDisplayDate(item.date, locale)}
+                      {item.name || t("dashboard.generalLabel")} | {formatDisplayDate(item.date, locale)}
                     </p>
                   </div>
                   <div
