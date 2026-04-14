@@ -84,6 +84,28 @@ function calculateSettledInterest(recordDate, closingDate, amount, rate, duratio
   return Number((amount * (rate / 100) * (elapsedMonths / 12)).toFixed(2));
 }
 
+async function getNetIncomeBalance(client, userId, accountMode) {
+  const result = await client.query(
+    `
+      SELECT
+        COALESCE(SUM(CASE WHEN LOWER(type) = 'income' THEN amount ELSE 0 END), 0) AS income_total,
+        COALESCE(SUM(CASE WHEN LOWER(type) = 'expense' THEN amount ELSE 0 END), 0) AS expense_total
+      FROM transactions
+      WHERE user_id = $1 AND account_mode = $2
+    `,
+    [userId, accountMode],
+  );
+
+  const incomeTotal = Number(result.rows[0]?.income_total) || 0;
+  const expenseTotal = Number(result.rows[0]?.expense_total) || 0;
+
+  return {
+    incomeTotal,
+    expenseTotal,
+    netBalance: incomeTotal - expenseTotal,
+  };
+}
+
 router.get("/", async (req, res) => {
   try {
     const userId = getAuthenticatedUserId(req);
@@ -280,6 +302,18 @@ router.post("/:id/close", async (req, res) => {
     }
 
     let transactionId = null;
+
+    if (accountMode === "personal" && record.type === "debt" && settledInterest > 0) {
+      const { netBalance } = await getNetIncomeBalance(client, userId, accountMode);
+
+      if (settledInterest > netBalance) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          success: false,
+          message: "You cannot close this debt because the interest exceeds your available earnings.",
+        });
+      }
+    }
 
     if (accountMode === "personal" && settledInterest > 0) {
       const transactionType = record.type === "credit" ? "Income" : "Expense";
