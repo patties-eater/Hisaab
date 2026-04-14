@@ -1,7 +1,14 @@
 const { Pool } = require("pg");
+const dns = require("dns");
 require("dotenv").config();
 
 const databaseUrl = process.env.DATABASE_URL;
+
+try {
+  dns.setDefaultResultOrder("ipv4first");
+} catch (err) {
+  // Older runtimes may not support changing DNS result order.
+}
 
 function createUnavailableDbClient() {
   const error = new Error(
@@ -24,6 +31,14 @@ function createUnavailableDbClient() {
 const pool = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,
+      family: 4,
+      ...(databaseUrl.includes("supabase.co")
+        ? {
+            ssl: {
+              rejectUnauthorized: false,
+            },
+          }
+        : {}),
     })
   : createUnavailableDbClient();
 
