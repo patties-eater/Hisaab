@@ -12,6 +12,7 @@ const peopleRoutes = require("./src/modules/people/people.routes");
 const adminRoutes = require("./src/modules/admin/admin.routes");
 const journalRoutes = require("./src/modules/journal/journal.routes");
 const accountingJournalRoutes = require("./src/modules/accountingJournal/accountingJournal.routes");
+const db = require("./src/config/db");
 const { ensureOwnershipColumns } = require("./src/utils/ownership");
 const { ensureJournalTable } = require("./src/utils/journal");
 const { ensureAccountingJournalTables } = require("./src/utils/accountingJournal");
@@ -36,15 +37,29 @@ app.get("/dashboard", authMiddleware, (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-Promise.all([
-  ensureOwnershipColumns(),
-  ensureJournalTable(),
-  ensureAccountingJournalTables(),
-])
-  .then(() => {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT} OK`));
-  })
-  .catch((err) => {
+async function initializeDatabaseHelpers() {
+  if (!db.hasDatabaseUrl) {
+    console.warn(
+      "DATABASE_URL is not set. Server will start, but database-backed routes will return errors until it is configured."
+    );
+    return;
+  }
+
+  try {
+    await Promise.all([
+      ensureOwnershipColumns(),
+      ensureJournalTable(),
+      ensureAccountingJournalTables(),
+    ]);
+    console.log("Database helpers initialized [OK]");
+  } catch (err) {
     console.error("Failed to initialize database helpers:", err);
-    process.exit(1);
-  });
+    console.warn(
+      "Continuing startup so the web process can stay alive. Check DATABASE_URL and the database service connection."
+    );
+  }
+}
+
+initializeDatabaseHelpers().finally(() => {
+  app.listen(PORT, () => console.log(`Server running on port ${PORT} OK`));
+});
