@@ -21,7 +21,7 @@ Hisaab is a family and small-business finance tracker with:
 
 Set these environment variables in `NewBackend/.env`:
 
-- `DATABASE_URL`
+- `DATABASE_URL` for your local PostgreSQL instance
 - `JWT_SECRET`
 - `PORT` optional, defaults to `5000`
 - `ADMIN_USER_ID` optional for admin login
@@ -72,7 +72,7 @@ For Render, point the backend service at `NewBackend` and use:
 
 Set these environment variables in Render:
 
-- `DATABASE_URL` from Supabase
+- `DATABASE_URL` from your database provider or local tunnel
 - `JWT_SECRET`
 - `ADMIN_USER_ID` if you use the admin login
 - `ADMIN_PASSWORD` or `ADMIN_PASSWORD_HASH`
