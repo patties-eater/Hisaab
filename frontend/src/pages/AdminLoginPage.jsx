@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { setAuthSession } from "../components/api";
+import { apiUrl, getFriendlyErrorMessage, setAuthSession } from "../components/api";
 
 export default function AdminLoginPage({ setAuthState }) {
   const [userId, setUserId] = useState("");
@@ -14,7 +14,7 @@ export default function AdminLoginPage({ setAuthState }) {
     setError("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/auth/admin/login", {
+      const res = await fetch(apiUrl("/api/auth/admin/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId, password }),
@@ -23,14 +23,19 @@ export default function AdminLoginPage({ setAuthState }) {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Admin login failed");
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: "We could not open the admin room. Please try again.",
+          }),
+        );
         return;
       }
 
       setAuthSession({ token: data.token, role: "admin" });
       setAuthState({ isLoggedIn: true, role: "admin" });
-    } catch (err) {
-      setError("Server error. Try again.");
+    } catch {
+      setError("Server is busy right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAccountMode } from "../accountMode";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders } from "../components/api";
 import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) => {
@@ -18,15 +18,15 @@ export default function PeoplePage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/people", {
+    fetch(apiUrl("/api/people"), {
       headers: getAuthHeaders(),
     })
       .then((res) => res.json())
       .then((data) => {
         if (data.success) setTransactions(data.data);
-        else setError("Failed to load transactions");
+        else setError("Server is busy right now. Please try again in a moment.");
       })
-      .catch(() => setError("Server error"))
+      .catch(() => setError("Server is busy right now. Please try again in a moment."))
       .finally(() => setLoading(false));
   }, []);
 
@@ -34,10 +34,8 @@ export default function PeoplePage() {
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <h1 className="text-2xl font-bold mb-4">
-        All Debt & Credit Transactions
-      </h1>
+    <div className="min-h-screen bg-gray-50 px-4 py-4 sm:px-6 lg:px-8">
+      <h1 className="text-2xl font-bold mb-4">Debt & Credit Records</h1>
       <div className="overflow-x-auto bg-white rounded-xl shadow-md p-4">
         <table className="min-w-full table-auto border-collapse">
           <thead>

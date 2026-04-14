@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders, getFriendlyErrorMessage } from "../components/api";
 import { formatDisplayDate } from "../utils/dates";
 
 const formatCurrency = (value) =>
@@ -18,20 +18,25 @@ export default function JournalEntriesPage() {
   useEffect(() => {
     const fetchVouchers = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/accounting-journal", {
+        const res = await fetch(apiUrl("/api/accounting-journal"), {
           headers: getAuthHeaders(),
         });
         const data = await res.json();
 
         if (!res.ok || !data.success) {
-          setError(data.message || "Failed to load journal entries");
+          setError(
+            getFriendlyErrorMessage({
+              status: res.status,
+              defaultMessage: "We could not load journal entries. Please try again.",
+            }),
+          );
           return;
         }
 
         setVouchers(data.data);
         setError("");
-      } catch (err) {
-        setError("Server error");
+      } catch {
+        setError("Server is busy right now. Please try again in a moment.");
       } finally {
         setLoading(false);
       }
@@ -50,7 +55,7 @@ export default function JournalEntriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-4 py-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>

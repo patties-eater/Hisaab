@@ -6,6 +6,28 @@ const { createJournalVoucher } = require("../../utils/accountingJournal");
 
 const router = express.Router();
 
+async function getNetIncomeBalance(client, userId, accountMode) {
+  const result = await client.query(
+    `
+      SELECT
+        COALESCE(SUM(CASE WHEN LOWER(type) = 'income' THEN amount ELSE 0 END), 0) AS income_total,
+        COALESCE(SUM(CASE WHEN LOWER(type) = 'expense' THEN amount ELSE 0 END), 0) AS expense_total
+      FROM transactions
+      WHERE user_id = $1 AND account_mode = $2
+    `,
+    [userId, accountMode],
+  );
+
+  const incomeTotal = Number(result.rows[0]?.income_total) || 0;
+  const expenseTotal = Number(result.rows[0]?.expense_total) || 0;
+
+  return {
+    incomeTotal,
+    expenseTotal,
+    netBalance: incomeTotal - expenseTotal,
+  };
+}
+
 // GET all transactions
 router.get("/", async (req, res) => {
   try {
@@ -31,12 +53,40 @@ router.post("/", async (req, res) => {
     const accountMode = getAuthenticatedAccountMode(req);
     const { name, type, title, amount, date } = req.body;
     const txDate = date || new Date().toISOString().split("T")[0];
+    const normalizedType = String(type || "").toLowerCase();
+    const numericAmount = Number(amount);
+
+    if (!name || !title || !Number.isFinite(numericAmount) || numericAmount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill in a valid amount and details.",
+      });
+    }
+
+    if (!["income", "expense"].includes(normalizedType)) {
+      return res.status(400).json({
+        success: false,
+        message: "Please choose income or expense.",
+      });
+    }
 
     await client.query("BEGIN");
 
+    if (normalizedType === "expense") {
+      const { netBalance } = await getNetIncomeBalance(client, userId, accountMode);
+
+      if (numericAmount > netBalance) {
+        await client.query("ROLLBACK");
+        return res.status(400).json({
+          success: false,
+          message: "You cannot add this expense because it exceeds your available income.",
+        });
+      }
+    }
+
     const result = await client.query(
       "INSERT INTO transactions (name, type, title, amount, date, user_id, account_mode) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *",
-      [name, type, title, amount, txDate, userId, accountMode]
+      [name, type, title, numericAmount, txDate, userId, accountMode]
     );
 
     await createJournalEntry(client, {
@@ -44,7 +94,7 @@ router.post("/", async (req, res) => {
       entityId: result.rows[0].id,
       action: "create",
       userId,
-      amount,
+      amount: numericAmount,
       referenceNo: result.rows[0].id,
       afterData: result.rows[0],
       notes: `Created ${type} transaction`,
@@ -60,33 +110,33 @@ router.post("/", async (req, res) => {
       userId,
       accountMode,
       lines:
-        type === "Income"
+        normalizedType === "income"
           ? [
               {
                 accountName: "Cash",
                 accountType: "Asset",
-                debit: amount,
+                debit: numericAmount,
                 credit: 0,
               },
               {
                 accountName: "Income",
                 accountType: "Revenue",
                 debit: 0,
-                credit: amount,
+                credit: numericAmount,
               },
             ]
           : [
               {
                 accountName: "Expense",
                 accountType: "Expense",
-                debit: amount,
+                debit: numericAmount,
                 credit: 0,
               },
               {
                 accountName: "Cash",
                 accountType: "Asset",
                 debit: 0,
-                credit: amount,
+                credit: numericAmount,
               },
             ],
     });

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders, getFriendlyErrorMessage } from "../components/api";
 import { useI18n } from "../i18n";
 import { formatDisplayDate } from "../utils/dates";
 
@@ -15,35 +15,35 @@ const AUDIT_SECTIONS = [
     id: "journal",
     labelKey: "audit.journalEntries",
     descriptionKey: "audit.journalDescription",
-    endpoint: "http://localhost:5000/api/accounting-journal",
+    endpoint: apiUrl("/api/accounting-journal"),
     live: true,
   },
   {
     id: "ledger",
     labelKey: "audit.ledger",
     descriptionKey: "audit.ledgerDescription",
-    endpoint: "http://localhost:5000/api/accounting-journal/ledger",
+    endpoint: apiUrl("/api/accounting-journal/ledger"),
     live: true,
   },
   {
     id: "cashbook",
     labelKey: "audit.cashBook",
     descriptionKey: "audit.cashBookDescription",
-    endpoint: "http://localhost:5000/api/accounting-journal/cash-book",
+    endpoint: apiUrl("/api/accounting-journal/cash-book"),
     live: true,
   },
   {
     id: "bankbook",
     labelKey: "audit.bankBook",
     descriptionKey: "audit.bankBookDescription",
-    endpoint: "http://localhost:5000/api/accounting-journal/bank-book",
+    endpoint: apiUrl("/api/accounting-journal/bank-book"),
     live: true,
   },
   {
     id: "trialbalance",
     labelKey: "audit.trialBalance",
     descriptionKey: "audit.trialBalanceDescription",
-    endpoint: "http://localhost:5000/api/accounting-journal/trial-balance",
+    endpoint: apiUrl("/api/accounting-journal/trial-balance"),
     live: true,
   },
 ];
@@ -522,7 +522,12 @@ export default function AuditPage() {
         const json = await res.json();
 
         if (!res.ok || !json.success) {
-          setError(json.message || t("audit.loadError"));
+          setError(
+            getFriendlyErrorMessage({
+              status: res.status,
+              defaultMessage: t("audit.loadError"),
+            }),
+          );
           return;
         }
 
@@ -531,8 +536,8 @@ export default function AuditPage() {
           [activeSection]: json.data,
         }));
         setError("");
-      } catch (err) {
-        setError(t("audit.serverError"));
+      } catch {
+        setError("Server is busy right now. Please try again in a moment.");
       } finally {
         setLoading(false);
       }
@@ -547,7 +552,7 @@ export default function AuditPage() {
   const currentData = sectionData[activeSection];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 px-4 py-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl space-y-6">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-slate-500">
@@ -557,7 +562,7 @@ export default function AuditPage() {
           <p className="mt-2 text-sm text-slate-600">{t("audit.subtitle")}</p>
         </div>
 
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
           {AUDIT_SECTIONS.map((section) => (
             <SectionButton
               key={section.id}

@@ -1,8 +1,7 @@
-// src/components/TransactionForm.jsx
 import { useState } from "react";
 import { useI18n } from "../i18n";
 
-export default function TransactionForm({ onAdd }) {
+export default function TransactionForm({ onAdd, availableBalance = 0 }) {
   const { t } = useI18n();
   const today = new Date().toISOString().split("T")[0];
   const [name, setName] = useState("");
@@ -10,22 +9,51 @@ export default function TransactionForm({ onAdd }) {
   const [title, setTitle] = useState("");
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(today);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e) => {
+  const formatCurrency = (value) =>
+    Number(value || 0).toLocaleString("en-IN", {
+      style: "currency",
+      currency: "NRS",
+      maximumFractionDigits: 0,
+    });
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !amount) return;
+    setError("");
+
+    if (!title || !amount) {
+      setError(t("transactionForm.requiredDetails"));
+      return;
+    }
+
+    const numericAmount = Number(amount);
+
+    if (!Number.isFinite(numericAmount) || numericAmount <= 0) {
+      setError(t("transactionForm.validAmount"));
+      return;
+    }
+
+    if (type === "Expense" && numericAmount > availableBalance) {
+      setError(t("transactionForm.expenseExceeded"));
+      return;
+    }
 
     const newTransaction = {
       name,
       type,
       title,
-      amount: Number(amount),
+      amount: numericAmount,
       date: date || today,
     };
 
-    onAdd(newTransaction);
+    const result = await onAdd(newTransaction);
 
-    // Reset form
+    if (!result?.success) {
+      setError(result?.message || t("transactionForm.serverBusy"));
+      return;
+    }
+
     setName("");
     setTitle("");
     setAmount("");
@@ -34,12 +62,9 @@ export default function TransactionForm({ onAdd }) {
   };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="bg-white p-4 rounded-lg shadow space-y-3"
-    >
+    <form onSubmit={handleSubmit} className="bg-white p-4 rounded-lg shadow space-y-3">
       <h3 className="font-bold text-gray-700">{t("transactionForm.title")}</h3>
-       <div>
+      <div>
         <label className="block text-sm font-semibold">{t("transactionForm.name")}</label>
         <input
           type="text"
@@ -58,8 +83,15 @@ export default function TransactionForm({ onAdd }) {
           className="border p-2 rounded w-full"
         >
           <option value="Income">{t("transactionForm.income")}</option>
-          <option value="Expense">{t("transactionForm.expense")}</option>
+          <option value="Expense" disabled={availableBalance <= 0}>
+            {t("transactionForm.expense")}
+          </option>
         </select>
+        <p className="mt-1 text-xs text-gray-500">
+          {type === "Expense"
+            ? `${t("transactionForm.availableBalance")}: ${formatCurrency(availableBalance)}`
+            : t("transactionForm.expenseHint")}
+        </p>
       </div>
 
       <div>
@@ -102,6 +134,7 @@ export default function TransactionForm({ onAdd }) {
       >
         {t("transactionForm.submit")}
       </button>
+      {error && <p className="text-sm text-red-600">{error}</p>}
     </form>
   );
 }

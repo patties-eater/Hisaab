@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders, getFriendlyErrorMessage } from "../components/api";
 import { formatDisplayDateTime } from "../utils/dates";
 
 function StatCard({ label, value }) {
@@ -32,21 +32,26 @@ export default function AdminDashboardPage() {
 
   const fetchOverview = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/admin/overview", {
+      const res = await fetch(apiUrl("/api/admin/overview"), {
         headers: getAuthHeaders(),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.error || result.message || "Failed to load admin data");
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: "We could not load the admin dashboard. Please try again.",
+          }),
+        );
         return;
       }
 
       setData(result.data);
       setError("");
-    } catch (err) {
-      setError("Server error");
+    } catch {
+      setError("Server is busy right now. Please try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -63,7 +68,7 @@ export default function AdminDashboardPage() {
     setMessage("");
 
     try {
-      const res = await fetch("http://localhost:5000/api/admin/users", {
+      const res = await fetch(apiUrl("/api/admin/users"), {
         method: "POST",
         headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(createForm),
@@ -72,15 +77,20 @@ export default function AdminDashboardPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.message || result.error || "Failed to create user");
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: "We could not create that user. Please try again.",
+          }),
+        );
         return;
       }
 
       setMessage(`User ${result.data.email} created successfully.`);
       setCreateForm(initialCreateForm);
       await fetchOverview();
-    } catch (err) {
-      setError("Server error");
+    } catch {
+      setError("Server is busy right now. Please try again in a moment.");
     } finally {
       setSubmitting(false);
     }
@@ -109,7 +119,7 @@ export default function AdminDashboardPage() {
     if (editForm.password.trim()) payload.password = editForm.password.trim();
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${editForm.userId}`, {
+      const res = await fetch(apiUrl(`/api/admin/users/${editForm.userId}`), {
         method: "PATCH",
         headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(payload),
@@ -118,15 +128,20 @@ export default function AdminDashboardPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.message || result.error || "Failed to update user");
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: "We could not save those changes. Please try again.",
+          }),
+        );
         return;
       }
 
       setMessage(`User ${result.data.email} updated successfully.`);
       setEditForm(initialEditForm);
       await fetchOverview();
-    } catch (err) {
-      setError("Server error");
+    } catch {
+      setError("Server is busy right now. Please try again in a moment.");
     } finally {
       setSubmitting(false);
     }
@@ -141,7 +156,7 @@ export default function AdminDashboardPage() {
     setMessage("");
 
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/users/${user.id}`, {
+      const res = await fetch(apiUrl(`/api/admin/users/${user.id}`), {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -149,7 +164,12 @@ export default function AdminDashboardPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.message || result.error || "Failed to delete user");
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: "We could not remove that user. Please try again.",
+          }),
+        );
         return;
       }
 
@@ -158,8 +178,8 @@ export default function AdminDashboardPage() {
         setEditForm(initialEditForm);
       }
       await fetchOverview();
-    } catch (err) {
-      setError("Server error");
+    } catch {
+      setError("Server is busy right now. Please try again in a moment.");
     } finally {
       setSubmitting(false);
     }

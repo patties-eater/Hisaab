@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAccountMode } from "../accountMode";
-import { getAuthHeaders } from "./api";
+import { apiUrl, getAuthHeaders, getFriendlyErrorMessage } from "./api";
 import { useI18n } from "../i18n";
 
 export default function DebtCreditForm({ onSuccess }) {
@@ -45,7 +45,7 @@ export default function DebtCreditForm({ onSuccess }) {
     setLoading(true);
 
     try {
-      const res = await fetch("http://localhost:5000/api/debt-credit", {
+      const res = await fetch(apiUrl("/api/debt-credit"), {
         method: "POST",
         headers: getAuthHeaders({
           "Content-Type": "application/json",
@@ -73,9 +73,14 @@ export default function DebtCreditForm({ onSuccess }) {
 
         if (onSuccess) onSuccess(); // refresh table
       } else {
-        setError(data.message || t("debtCreditForm.saveFailed"));
+        setError(
+          getFriendlyErrorMessage({
+            status: res.status,
+            defaultMessage: t("debtCreditForm.saveFailed"),
+          }),
+        );
       }
-    } catch (err) {
+    } catch {
       setError(t("debtCreditForm.serverError"));
     }
 
@@ -89,7 +94,7 @@ export default function DebtCreditForm({ onSuccess }) {
   });
 
   return (
-    <div className="sticky top-6 max-h-[calc(100vh-8rem)] overflow-hidden self-start rounded-xl border border-gray-100 bg-white p-5 shadow-md">
+    <div className="self-start rounded-2xl border border-gray-100 bg-white p-4 shadow-md lg:sticky lg:top-6 lg:max-h-[calc(100vh-8rem)] lg:overflow-hidden lg:p-5">
       <div className="mb-4 flex items-center justify-between border-b border-gray-100 pb-3">
         <h2 className="text-lg font-bold text-gray-800">
           {t("debtCreditForm.title")}
@@ -99,22 +104,22 @@ export default function DebtCreditForm({ onSuccess }) {
         </span>
       </div>
 
-      <div className="space-y-4 overflow-y-auto pr-1">
+      <div className="space-y-4 lg:overflow-y-auto lg:pr-1">
         {/* name */}
         <div className="flex flex-col space-y-1">
           <label className="text-xs font-bold text-gray-500 uppercase">
             {t("debtCreditForm.name")}
           </label>
-          <textarea
+          <input
+            type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            rows="1"
-            className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col space-y-1">
             <label className="text-xs font-bold text-gray-500 uppercase">
               {t("debtCreditForm.amount")}
@@ -124,7 +129,7 @@ export default function DebtCreditForm({ onSuccess }) {
               name="amount"
               value={formData.amount}
               onChange={handleChange}
-              className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
 
@@ -137,14 +142,14 @@ export default function DebtCreditForm({ onSuccess }) {
               name="date"
               value={formData.date}
               onChange={handleChange}
-              className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+              className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
         </div>
 
         {/* Rate + Duration */}
         {!isShopMode && (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div className="flex flex-col space-y-1">
               <label className="text-xs font-bold text-gray-500 uppercase">
                 {t("debtCreditForm.interestRate")}
@@ -155,7 +160,7 @@ export default function DebtCreditForm({ onSuccess }) {
                 name="rate"
                 value={formData.rate}
                 onChange={handleChange}
-                className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
 
@@ -168,7 +173,7 @@ export default function DebtCreditForm({ onSuccess }) {
                 name="duration"
                 value={formData.duration}
                 onChange={handleChange}
-                className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none"
+                className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none"
               />
             </div>
           </div>
@@ -184,7 +189,7 @@ export default function DebtCreditForm({ onSuccess }) {
             value={formData.notes}
             onChange={handleChange}
             rows="2"
-            className="rounded-lg border p-2.5 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
+            className="rounded-xl border border-slate-200 p-3 focus:ring-2 focus:ring-blue-500 outline-none resize-none"
           />
         </div>
 
@@ -204,11 +209,11 @@ export default function DebtCreditForm({ onSuccess }) {
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
         {/* Buttons */}
-        <div className="grid grid-cols-2 gap-4 pt-2">
+        <div className="grid gap-3 sm:grid-cols-2 pt-2">
           <button
             onClick={() => handleSubmit("debt")}
             disabled={loading}
-            className="rounded-lg bg-red-500 py-2.5 font-bold text-white transition hover:bg-red-600"
+            className="rounded-xl bg-red-500 py-3 font-bold text-white transition hover:bg-red-600"
           >
             {loading ? t("debtCreditForm.saving") : t("debtCreditForm.saveDebt")}
           </button>
@@ -216,7 +221,7 @@ export default function DebtCreditForm({ onSuccess }) {
           <button
             onClick={() => handleSubmit("credit")}
             disabled={loading}
-            className="rounded-lg bg-green-500 py-2.5 font-bold text-white transition hover:bg-green-600"
+            className="rounded-xl bg-green-500 py-3 font-bold text-white transition hover:bg-green-600"
           >
             {loading ? t("debtCreditForm.saving") : t("debtCreditForm.saveCredit")}
           </button>

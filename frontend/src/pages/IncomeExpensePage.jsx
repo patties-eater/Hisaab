@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import StatCard from "../components/StatCard";
 import TransactionForm from "../components/TransactionForm";
 import TransactionTable from "../components/TransactionTable";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders } from "../components/api";
 import { useI18n } from "../i18n";
 
 const formatCurrency = (value) =>
@@ -16,17 +16,16 @@ const IncomeExpensePage = () => {
   const { t } = useI18n();
   const [transactions, setTransactions] = useState([]);
 
-  // Fetch transactions from backend
   useEffect(() => {
     const fetchTransactions = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/transactions", {
+        const res = await fetch(apiUrl("/api/transactions"), {
           headers: getAuthHeaders(),
         });
         const data = await res.json();
         if (data.success) setTransactions(data.data);
-      } catch (err) {
-        console.error(err);
+      } catch {
+        // Keep the page quiet and show a plain fallback.
       }
     };
     fetchTransactions();
@@ -45,7 +44,7 @@ const IncomeExpensePage = () => {
 
   const handleAddTransaction = async (newTransaction) => {
     try {
-      const res = await fetch("http://localhost:5000/api/transactions", {
+      const res = await fetch(apiUrl("/api/transactions"), {
         method: "POST",
         headers: getAuthHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(newTransaction),
@@ -54,42 +53,47 @@ const IncomeExpensePage = () => {
       if (data.success) {
         setTransactions((prev) =>
           [data.data, ...prev].sort(
-            (a, b) => new Date(b.date) - new Date(a.date),
+            (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
           ),
         );
+        return { success: true, data: data.data };
       }
-    } catch (err) {
-      console.error(err);
+      return { success: false, message: data.message };
+    } catch {
+      return {
+        success: false,
+        message: "Server is busy right now. Please try again in a moment.",
+      };
     }
   };
 
   const netBalance = totalIncome - totalExpense;
 
   return (
-    <div className="p-8 space-y-8">
-      <div className="grid md:grid-cols-3 gap-6">
+    <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           title={t("incomeExpense.totalIncome")}
           value={formatCurrency(totalIncome)}
-          icon="💰"
+          icon="IN"
           color="green"
         />
         <StatCard
           title={t("incomeExpense.totalExpenses")}
           value={formatCurrency(totalExpense)}
-          icon="💸"
+          icon="EX"
           color="red"
         />
         <StatCard
           title={t("incomeExpense.netBalance")}
           value={formatCurrency(netBalance)}
-          icon={netBalance >= 0 ? "📈" : "📉"}
+          icon={netBalance >= 0 ? "UP" : "DN"}
           color={netBalance >= 0 ? "blue" : "red"}
         />
       </div>
 
-      <div className="grid lg:grid-cols-3 gap-8">
-        <TransactionForm onAdd={handleAddTransaction} />
+      <div className="grid gap-6 lg:grid-cols-3">
+        <TransactionForm onAdd={handleAddTransaction} availableBalance={netBalance} />
         <div className="lg:col-span-2">
           <TransactionTable transactions={transactions} />
         </div>

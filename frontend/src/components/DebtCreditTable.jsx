@@ -113,28 +113,165 @@ export default function DebtCreditTable({
   if (loading) return <p className="text-gray-500">{t("debtCreditTable.loading")}</p>;
 
   return (
-    <div className="bg-white rounded-xl shadow-md p-6 border border-gray-100">
-      <h2 className="text-xl font-bold text-gray-800 mb-4">
-        {t("debtCreditTable.title")}
-      </h2>
+    <div className="rounded-2xl border border-gray-100 bg-white p-4 shadow-md sm:p-6">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-xl font-bold text-gray-800">
+          {t("debtCreditTable.title")}
+        </h2>
+      </div>
 
       {records.length === 0 ? (
         <p className="text-gray-500">{t("debtCreditTable.empty")}</p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full text-sm text-left border-collapse">
+        <>
+          <div className="space-y-3 md:hidden">
+            {records.map((item) => {
+              const closeDate =
+                closeDates[item.id] || formatDateInputValue(new Date());
+              const previewInterest =
+                item.status === "closed"
+                  ? Number(item.settled_interest || 0)
+                  : calculateInterestByDate(item, closeDate);
+
+              return (
+                <div
+                  key={item.id}
+                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">{item.name}</p>
+                      <p className="mt-1 text-xs uppercase tracking-[0.2em] text-slate-500">
+                        {item.type === "debt"
+                          ? t("debtCreditPage.totalDebt")
+                          : t("debtCreditPage.totalCredit")}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-lg font-black text-slate-900">
+                        {formatCurrency(item.amount)}
+                      </p>
+                      <p
+                        className={`text-xs font-semibold ${
+                          item.status === "closed"
+                            ? "text-slate-500"
+                            : "text-blue-700"
+                        }`}
+                      >
+                        {item.status === "closed"
+                          ? t("debtCreditTable.closed")
+                          : t("debtCreditTable.active")}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        {t("debtCreditTable.date")}
+                      </p>
+                      <p className="mt-1 font-medium text-slate-900">
+                        {formatDisplayDate(item.date, locale)}
+                      </p>
+                    </div>
+                    <div className="rounded-xl bg-slate-50 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                        {t("debtCreditTable.notes")}
+                      </p>
+                      <p className="mt-1 font-medium text-slate-900">
+                        {item.notes || t("debtCreditTable.noNotes")}
+                      </p>
+                    </div>
+                  </div>
+
+                  {!isShopMode && (
+                    <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                      <div className="rounded-xl bg-slate-50 p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                          {t("debtCreditTable.rate")}
+                        </p>
+                        <p className="mt-1 font-medium text-slate-900">{item.rate}%</p>
+                      </div>
+                      <div className="rounded-xl bg-slate-50 p-3">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                          {t("debtCreditTable.duration")}
+                        </p>
+                        <p className="mt-1 font-medium text-slate-900">
+                          {item.duration} {t("debtCreditTable.monthsShort")}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {!isShopMode && item.status !== "closed" && (
+                    <div className="mt-3 rounded-xl bg-green-50 p-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-green-700">
+                        {t("debtCreditForm.estimatedInterest")}
+                      </p>
+                      <p className="mt-1 text-lg font-black text-green-700">
+                        {formatCurrency(previewInterest)}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mt-3 rounded-xl border border-slate-200 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-500">
+                      {t("debtCreditTable.clearance")}
+                    </p>
+                    {item.status === "closed" ? (
+                      <p className="mt-2 text-sm text-slate-600">
+                        {isShopMode
+                          ? formatCurrency(item.amount)
+                          : item.type === "credit"
+                            ? `${t("debtCreditTable.creditInterestPosted")}: ${formatCurrency(item.settled_interest)}`
+                            : `${t("debtCreditTable.debtInterestPosted")}: ${formatCurrency(item.settled_interest)}`}
+                      </p>
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        <input
+                          type="date"
+                          value={closeDate}
+                          min={formatDateInputValue(item.date)}
+                          onChange={(e) =>
+                            setCloseDates((prev) => ({
+                              ...prev,
+                              [item.id]: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-xl border border-slate-200 p-3"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onCloseRecord?.(item, closeDate)}
+                          disabled={closingRecordId === item.id}
+                          className="w-full rounded-xl bg-slate-900 px-3 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {closingRecordId === item.id
+                            ? t("debtCreditTable.clearing")
+                            : t("debtCreditTable.clear")}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-2xl border border-slate-100 md:block">
+          <table className="min-w-full border-collapse text-left text-sm">
             <thead>
-              <tr className="border-b">
-                <th className="py-2 px-3">{t("debtCreditTable.name")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.type")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.amount")}</th>
-                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.rate")}</th>}
-                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.duration")}</th>}
-                {!isShopMode && <th className="py-2 px-3">{t("debtCreditTable.interest")}</th>}
-                <th className="py-2 px-3">{t("debtCreditTable.date")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.status")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.clearance")}</th>
-                <th className="py-2 px-3">{t("debtCreditTable.notes")}</th>
+              <tr className="border-b bg-slate-50">
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.name")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.type")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.amount")}</th>
+                {!isShopMode && <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.rate")}</th>}
+                {!isShopMode && <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.duration")}</th>}
+                {!isShopMode && <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.interest")}</th>}
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.date")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.status")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.clearance")}</th>
+                <th className="px-3 py-3 text-xs font-bold uppercase tracking-[0.2em] text-slate-500">{t("debtCreditTable.notes")}</th>
               </tr>
             </thead>
             <tbody>
@@ -149,11 +286,11 @@ export default function DebtCreditTable({
                 return (
                   <tr
                     key={item.id}
-                    className="border-b align-top hover:bg-gray-50 transition"
+                    className="border-b align-top transition hover:bg-gray-50"
                   >
-                    <td className="py-2 px-3">{item.name}</td>
+                    <td className="px-3 py-3">{item.name}</td>
                     <td
-                      className={`py-2 px-3 font-semibold ${
+                      className={`px-3 py-3 font-semibold ${
                         item.type === "debt"
                           ? "text-red-600"
                           : "text-green-600"
@@ -164,16 +301,16 @@ export default function DebtCreditTable({
                         : t("debtCreditPage.totalCredit")}
                     </td>
 
-                    <td className="py-2 px-3">{formatCurrency(item.amount)}</td>
+                    <td className="px-3 py-3">{formatCurrency(item.amount)}</td>
 
-                    {!isShopMode && <td className="py-2 px-3">{item.rate}%</td>}
+                    {!isShopMode && <td className="px-3 py-3">{item.rate}%</td>}
 
                     {!isShopMode && (
-                      <td className="py-2 px-3">{item.duration} {t("debtCreditTable.monthsShort")}</td>
+                      <td className="px-3 py-3">{item.duration} {t("debtCreditTable.monthsShort")}</td>
                     )}
 
                     {!isShopMode && (
-                      <td className="py-2 px-3">
+                      <td className="px-3 py-3">
                         <div>{formatCurrency(item.estimated_interest)}</div>
                         {item.status !== "closed" && (
                           <div className="text-xs text-gray-500">
@@ -183,11 +320,11 @@ export default function DebtCreditTable({
                       </td>
                     )}
 
-                    <td className="py-2 px-3">
+                    <td className="px-3 py-3">
                       {formatDisplayDate(item.date, locale)}
                     </td>
 
-                    <td className="py-2 px-3">
+                    <td className="px-3 py-3">
                       {item.status === "closed" ? (
                         <div className="space-y-1">
                           <span className="inline-flex rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">
@@ -206,7 +343,7 @@ export default function DebtCreditTable({
                       )}
                     </td>
 
-                    <td className="py-2 px-3 min-w-[220px]">
+                    <td className="min-w-[220px] px-3 py-3">
                       {item.status === "closed" ? (
                         <div className="text-xs text-gray-600">
                           {isShopMode
@@ -249,7 +386,7 @@ export default function DebtCreditTable({
                       )}
                     </td>
 
-                    <td className="py-2 px-3 text-gray-500">
+                    <td className="px-3 py-3 text-gray-500">
                       {item.notes || t("debtCreditTable.noNotes")}
                     </td>
                   </tr>
@@ -257,7 +394,8 @@ export default function DebtCreditTable({
               })}
             </tbody>
           </table>
-        </div>
+          </div>
+        </>
       )}
     </div>
   );

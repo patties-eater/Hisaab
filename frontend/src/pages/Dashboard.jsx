@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useAccountMode } from "../accountMode";
 import { NavLink } from "react-router-dom";
-import { getAuthHeaders } from "../components/api";
+import { apiUrl, getAuthHeaders } from "../components/api";
 import { useI18n } from "../i18n";
 import { formatDisplayDate } from "../utils/dates";
 
@@ -78,9 +78,9 @@ export default function Dashboard() {
       try {
         const headers = getAuthHeaders();
         const [dashboardRes, transactionsRes, debtCreditRes] = await Promise.all([
-          fetch("http://localhost:5000/api/dashboard", { headers }),
-          fetch("http://localhost:5000/api/transactions", { headers }),
-          fetch("http://localhost:5000/api/debt-credit", { headers }),
+          fetch(apiUrl("/api/dashboard"), { headers }),
+          fetch(apiUrl("/api/transactions"), { headers }),
+          fetch(apiUrl("/api/debt-credit"), { headers }),
         ]);
 
         const [dashboardJson, transactionsJson, debtCreditJson] = await Promise.all([
@@ -90,16 +90,15 @@ export default function Dashboard() {
         ]);
 
         if (!dashboardRes.ok || !dashboardJson.success) {
-          throw new Error(dashboardJson.message || "Failed to load dashboard");
+          throw new Error("Dashboard request failed");
         }
 
         setDashboardData(dashboardJson.data);
         setTransactions(transactionsJson.success ? transactionsJson.data : []);
         setDebtCreditRecords(debtCreditJson.success ? debtCreditJson.data : []);
         setError("");
-      } catch (err) {
-        console.error("Dashboard fetch error:", err);
-        setError("Could not load dashboard data.");
+      } catch {
+        setError("Server is busy right now. Please try again in a moment.");
       } finally {
         setLoading(false);
       }
@@ -153,14 +152,14 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-8 p-6">
+    <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           {error}
         </div>
       )}
 
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <DashboardCard
           title={t("dashboard.income")}
           value={formatCurrency(insights.totalIncome)}
@@ -187,7 +186,7 @@ export default function Dashboard() {
         />
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
         <SectionCard
           title="Recent Transactions"
           subtitle={t("dashboard.recentTransactionsHint")}
@@ -269,7 +268,7 @@ export default function Dashboard() {
         </SectionCard>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <SectionCard
           title={t("dashboard.recentDebtCredit")}
           subtitle={t("dashboard.recentDebtCreditHint")}

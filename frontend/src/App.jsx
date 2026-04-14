@@ -9,6 +9,7 @@ import {
 import {
   clearAuthSession,
   getAuthHeaders,
+  apiUrl,
   getStoredAccountMode,
   getAuthToken,
   getStoredRole,
@@ -46,45 +47,176 @@ function adminNavLinkClasses({ isActive }) {
   }`;
 }
 
+function mobileNavLinkClasses({ isActive }) {
+  return `min-w-[64px] rounded-full px-3 py-2 text-center text-xs font-semibold leading-tight transition ${
+    isActive
+      ? "bg-slate-900 text-white shadow-sm"
+      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+  }`;
+}
+
+function MobileNavItem({ to, label, children, onClick }) {
+  return (
+    <NavLink to={to} className={mobileNavLinkClasses} onClick={onClick}>
+      <span className="block">{children}</span>
+      <span className="block text-[10px] opacity-85">{label}</span>
+    </NavLink>
+  );
+}
+
+function MobileMoreButton({ active, onClick, label }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-w-[64px] rounded-full px-3 py-2 text-center text-xs font-semibold leading-tight transition ${
+        active
+          ? "bg-slate-900 text-white shadow-sm"
+          : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+      }`}
+    >
+      <span className="block">M</span>
+      <span className="block text-[10px] opacity-85">{label}</span>
+    </button>
+  );
+}
+
+function BrandMark() {
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-slate-900 text-sm font-black text-white shadow-sm">
+        H
+      </div>
+      <div className="leading-tight">
+        <p className="text-sm font-black tracking-wide text-slate-900">Hisaab</p>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">Finance</p>
+      </div>
+    </div>
+  );
+}
+
+function MobileBrandBar({ dark = false }) {
+  return (
+    <div
+      className={`fixed inset-x-0 top-0 z-50 flex h-14 items-center justify-between border-b px-3 md:hidden ${
+        dark ? "border-slate-800 bg-slate-900/95 backdrop-blur" : "border-slate-200 bg-white/95 backdrop-blur"
+      }`}
+    >
+      <div className="flex items-center gap-2">
+        <div className={`flex h-7 w-7 items-center justify-center rounded-lg text-xs font-black shadow-sm ${dark ? "bg-amber-400 text-slate-950" : "bg-slate-900 text-white"}`}>
+          H
+        </div>
+        <div className="leading-tight">
+          <p className={`text-xs font-black tracking-wide ${dark ? "text-white" : "text-slate-900"}`}>Hisaab</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function UserNav({ onLogout }) {
   const { t } = useI18n();
+  const [moreOpen, setMoreOpen] = useState(false);
+  const closeMore = () => setMoreOpen(false);
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 shadow-md backdrop-blur">
-      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
-        <NavLink to="/dashboard" className={navLinkClasses}>
-        {t("nav.dashboard")}
-        </NavLink>
-        <NavLink to="/people" className={navLinkClasses}>
-        {t("nav.people")}
-        </NavLink>
-        <NavLink to="/add" className={navLinkClasses}>
-        {t("nav.debtCredit")}
-        </NavLink>
-        <NavLink
-        to="/income-expense"
-        className={navLinkClasses}
-      >
-        {t("nav.incomeExpense")}
-        </NavLink>
-        <NavLink to="/analytics" className={navLinkClasses}>
-        {t("nav.analytics")}
-        </NavLink>
-        <NavLink to="/audit" className={navLinkClasses}>
-        {t("nav.audit")}
-        </NavLink>
-        <NavLink to="/settings" className={navLinkClasses}>
-        {t("nav.settings")}
-        </NavLink>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700 md:ml-0"
-        >
-          {t("nav.logout")}
-        </button>
-      </div>
-    </nav>
+    <>
+      <MobileBrandBar />
+      <nav className="fixed inset-x-0 top-0 z-50 hidden border-b border-slate-200 bg-white/95 shadow-md backdrop-blur md:block">
+        <div className="flex items-center gap-4 px-4 py-3">
+          <BrandMark />
+          <div className="flex flex-1 gap-2 overflow-x-auto md:justify-center">
+            <NavLink to="/dashboard" className={navLinkClasses}>
+              {t("nav.dashboard")}
+            </NavLink>
+            <NavLink to="/people" className={navLinkClasses}>
+              {t("nav.people")}
+            </NavLink>
+            <NavLink to="/add" className={navLinkClasses}>
+              {t("nav.debtCredit")}
+            </NavLink>
+            <NavLink to="/income-expense" className={navLinkClasses}>
+              {t("nav.incomeExpense")}
+            </NavLink>
+            <NavLink to="/analytics" className={navLinkClasses}>
+              {t("nav.analytics")}
+            </NavLink>
+            <NavLink to="/audit" className={navLinkClasses}>
+              {t("nav.audit")}
+            </NavLink>
+            <NavLink to="/settings" className={navLinkClasses}>
+              {t("nav.settings")}
+            </NavLink>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="rounded-full px-4 py-2 text-sm font-semibold text-red-600 transition hover:bg-red-50 hover:text-red-700"
+          >
+            {t("nav.logout")}
+          </button>
+        </div>
+      </nav>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-200 bg-white/95 shadow-[0_-8px_24px_rgba(15,23,42,0.08)] backdrop-blur md:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto px-3 py-3">
+          <MobileNavItem to="/dashboard" label={t("navShort.dashboard")} onClick={closeMore}>
+            {t("navShort.dashboardIcon")}
+          </MobileNavItem>
+          <MobileNavItem to="/people" label={t("navShort.people")} onClick={closeMore}>
+            {t("navShort.peopleIcon")}
+          </MobileNavItem>
+          <MobileNavItem to="/add" label={t("navShort.debtCredit")} onClick={closeMore}>
+            {t("navShort.debtCreditIcon")}
+          </MobileNavItem>
+          <MobileNavItem to="/income-expense" label={t("navShort.incomeExpense")} onClick={closeMore}>
+            {t("navShort.incomeExpenseIcon")}
+          </MobileNavItem>
+          <MobileMoreButton
+            active={moreOpen}
+            onClick={() => setMoreOpen((open) => !open)}
+            label={t("navShort.more")}
+          />
+        </div>
+        {moreOpen ? (
+          <div className="border-t border-slate-200 bg-white px-3 pb-4 pt-3">
+            <div className="grid gap-2">
+              <NavLink
+                to="/analytics"
+                onClick={closeMore}
+                className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700"
+              >
+                {t("nav.analytics")}
+              </NavLink>
+              <NavLink
+                to="/audit"
+                onClick={closeMore}
+                className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700"
+              >
+                {t("nav.audit")}
+              </NavLink>
+              <NavLink
+                to="/settings"
+                onClick={closeMore}
+                className="w-full rounded-2xl bg-slate-50 px-4 py-3 text-left text-sm font-semibold text-slate-700"
+              >
+                {t("nav.settings")}
+              </NavLink>
+              <button
+                type="button"
+                onClick={() => {
+                  closeMore();
+                  onLogout();
+                }}
+                className="rounded-2xl bg-rose-50 px-4 py-3 text-left text-sm font-semibold text-rose-600"
+              >
+                {t("nav.logout")}
+              </button>
+            </div>
+          </div>
+        ) : null}
+      </nav>
+    </>
   );
 }
 
@@ -92,20 +224,58 @@ function AdminNav({ onLogout }) {
   const { t } = useI18n();
 
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-800 bg-slate-900/95 shadow-md backdrop-blur">
-      <div className="flex gap-2 overflow-x-auto px-4 py-3 md:justify-center">
-        <NavLink to="/admin/dashboard" className={adminNavLinkClasses}>
-        {t("nav.adminDashboard")}
-        </NavLink>
-        <button
-          type="button"
-          onClick={onLogout}
-          className="ml-auto rounded-full px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-slate-800 hover:text-rose-200 md:ml-0"
-        >
-          {t("nav.logout")}
-        </button>
-      </div>
-    </nav>
+    <>
+      <MobileBrandBar dark />
+      <nav className="fixed inset-x-0 top-0 z-50 hidden border-b border-slate-800 bg-slate-900/95 shadow-md backdrop-blur md:block">
+        <div className="flex items-center gap-4 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-amber-400 text-sm font-black text-slate-950 shadow-sm">
+              H
+            </div>
+            <div className="leading-tight">
+              <p className="text-sm font-black tracking-wide text-white">Hisaab</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-400">Admin</p>
+            </div>
+          </div>
+          <div className="flex flex-1 justify-center">
+            <NavLink to="/admin/dashboard" className={adminNavLinkClasses}>
+              {t("nav.adminDashboard")}
+            </NavLink>
+          </div>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="rounded-full px-4 py-2 text-sm font-semibold text-rose-300 transition hover:bg-slate-800 hover:text-rose-200"
+          >
+            {t("nav.logout")}
+          </button>
+        </div>
+      </nav>
+
+      <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-slate-800 bg-slate-900/95 shadow-[0_-8px_24px_rgba(15,23,42,0.18)] backdrop-blur md:hidden">
+        <div className="flex items-center gap-2 overflow-x-auto px-3 py-3">
+          <NavLink
+            to="/admin/dashboard"
+            className={({ isActive }) =>
+              `min-w-max rounded-full px-3 py-2 text-xs font-semibold transition ${
+                isActive
+                  ? "bg-amber-400 text-slate-950 shadow-sm"
+                  : "bg-slate-800 text-slate-100 hover:bg-slate-700"
+              }`
+            }
+          >
+            {t("nav.adminDashboard")}
+          </NavLink>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="min-w-max rounded-full bg-rose-500/15 px-3 py-2 text-xs font-semibold text-rose-300 transition hover:bg-rose-500/25"
+          >
+            {t("nav.logout")}
+          </button>
+        </div>
+      </nav>
+    </>
   );
 }
 
@@ -141,7 +311,7 @@ function AppShell() {
       }
 
       try {
-        const res = await fetch("http://localhost:5000/api/auth/me", {
+        const res = await fetch(apiUrl("/api/auth/me"), {
           headers: getAuthHeaders(),
         });
 
@@ -165,7 +335,7 @@ function AppShell() {
         setStoredAccountMode(preferredAccountMode);
 
         setAuthState({ isLoggedIn: true, role });
-      } catch (err) {
+      } catch {
         handleLogout();
       } finally {
         setIsCheckingAuth(false);
@@ -192,7 +362,7 @@ function AppShell() {
         {isUser && <UserNav onLogout={handleLogout} />}
         {isAdmin && <AdminNav onLogout={handleLogout} />}
 
-        <div className="flex-grow pt-20">
+        <div className="flex-grow pb-24 pt-16 md:pb-0 md:pt-20">
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route
