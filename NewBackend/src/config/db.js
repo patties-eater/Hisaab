@@ -32,7 +32,7 @@ const pool = databaseUrl
   ? new Pool({
       connectionString: databaseUrl,
       family: 4,
-      ...(databaseUrl.includes("supabase.co")
+      ...(databaseUrl.includes("supabase.co") || databaseUrl.includes("supabase.com")
         ? {
             ssl: {
               rejectUnauthorized: false,
