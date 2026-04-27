@@ -5,18 +5,11 @@ import { apiUrl, getFriendlyErrorMessage } from "../components/api";
 export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [notABot, setNotABot] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async (e) => {
     e.preventDefault();
-
-    if (!notABot) {
-      setMessage("Please confirm that you are not a bot before creating an account.");
-      return;
-    }
-
     setLoading(true);
     setMessage("");
 
@@ -31,7 +24,6 @@ export default function RegisterPage() {
       if (res.ok) {
         setEmail("");
         setPassword("");
-        setNotABot(false);
         setMessage("Your account is ready. You can sign in now.");
       } else {
         setMessage(
@@ -105,23 +97,11 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label className="flex items-start gap-3 rounded-md border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={notABot}
-                  onChange={(e) => setNotABot(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <span>I am not a bot</span>
-              </label>
-            </div>
-
-            <div>
               <button
                 type="submit"
-                disabled={loading || !notABot}
+                disabled={loading}
                 className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
-                  loading || !notABot ? "opacity-75 cursor-not-allowed" : ""
+                  loading ? "opacity-75 cursor-not-allowed" : ""
                 }`}
               >
                 {loading ? "Registering..." : "Register"}
