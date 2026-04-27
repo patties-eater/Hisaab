@@ -3,31 +3,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const pool = require("../../config/db");
 const authMiddleware = require("../../middlewares/authMiddleware");
-const {
-  createLoginLimiter,
-  createRegistrationLimiter,
-} = require("../../middlewares/rateLimiter");
 
 const router = express.Router();
-
-const registerLimiter = createRegistrationLimiter({
-  windowMs: 60 * 60 * 1000,
-  limit: 5,
-  message: "Too many signup attempts from this network. Please try again later.",
-});
-
-const loginLimiter = createLoginLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 8,
-  message: "Too many failed sign-in attempts for this account. Please try again in a few minutes.",
-});
-
-const adminLoginLimiter = createLoginLimiter({
-  windowMs: 15 * 60 * 1000,
-  limit: 5,
-  message: "Too many failed admin sign-in attempts. Please try again in a few minutes.",
-  identifierExtractor: (req) => req.body?.userId,
-});
 
 function signToken(payload) {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1h" });
@@ -42,7 +19,7 @@ function getAdminCredentials() {
 }
 
 // REGISTER
-router.post("/register", registerLimiter, async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -80,7 +57,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 
 
 // LOGIN
-router.post("/login", loginLimiter, async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -110,7 +87,7 @@ router.post("/login", loginLimiter, async (req, res) => {
   }
 });
 
-router.post("/admin/login", adminLoginLimiter, async (req, res) => {
+router.post("/admin/login", async (req, res) => {
   try {
     const { userId, password } = req.body;
     const admin = getAdminCredentials();
